@@ -2,7 +2,8 @@
 
 <PropertyList>
   <path>Models/Effects/procedural_light.ac</path>
-  
+
+  <!--
   <light>
       <name>taxi</name>
       <type>spot</type>
@@ -43,6 +44,7 @@
       <spot-cutoff>35</spot-cutoff>
       <range-m>100</range-m>
   </light>
+  -->
 
   <effect>
     <inherits-from>Aircraft/JA37/Models/Effects/proc-als-lights/taxi-light</inherits-from>
