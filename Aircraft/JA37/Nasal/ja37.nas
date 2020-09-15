@@ -7,14 +7,11 @@ var encode3bits = func(first, second, third) {
   return integer;
 }
 
-var LOOP_STANDARD_RATE = 0.25;
-var LOOP_FAST_RATE     = 0.05;
 var LOOP_SLOW_RATE     = 1.50;
 
 var FALSE = 0;
 var TRUE = 1;
 
-var total_fuel = 0;
 var bingoFuel = FALSE;
 
 var mainOn = FALSE;
@@ -53,8 +50,6 @@ input = {
   damage:           "environment/damage",
   damageSmoke:      "environment/damage-smoke",
   dens:             "fdm/jsbsim/atmosphere/density-altitude",
-  dme:              "instrumentation/dme/KDI572-574/nm",
-  dmeDist:          "instrumentation/dme/indicated-distance-nm",
   downFps:          "/velocities/down-relground-fps",
   elapsed:          "sim/time/elapsed-sec",
   elapsedInit:      "sim/time/elapsed-at-init-sec",
@@ -64,12 +59,8 @@ input = {
   fdmAug:           "fdm/jsbsim/propulsion/engine/augmentation",
   flame:            "engines/engine/flame",
   flapPosCmd:       "/fdm/jsbsim/fcs/flaps/pos-cmd",
-  fuelInternalRatio:"ja37/avionics/fuel-internal-ratio",
-  fuelNeedleB:      "/instrumentation/fuel/needleB_rot",
-  fuelNeedleF:      "/instrumentation/fuel/needleF_rot",
   fuelRatio:        "/instrumentation/fuel/ratio",
   fuelTemp:         "ja37/supported/fuel-temp",
-  fuelWarning:      "ja37/sound/fuel-low-on",
   fullInit:         "sim/time/full-init",
   g3d:              "/velocities/groundspeed-3D-kt",
   gearSteerNorm:    "/gear/gear[0]/steering-norm",
@@ -87,7 +78,7 @@ input = {
   indAlt:           "/instrumentation/altitude-indicator",
   indAltFt:         "instrumentation/altimeter/indicated-altitude-ft",
   indAltMeter:      "instrumentation/altimeter/indicated-altitude-meter",
-  indAT:            "ja37/avionics/auto-throttle-on",
+  indAT:            "fdm/jsbsim/autoflight/athr",
   indAtt:           "/instrumentation/attitude-indicator",
   indJoy:           "/instrumentation/joystick-indicator",
   indRev:           "/instrumentation/reverse-indicator",
@@ -99,11 +90,6 @@ input = {
   lampStart:        "ja37/avionics/startSys",
   lampStick:        "ja37/avionics/joystick",
   lampXTank:        "ja37/avionics/xtank",
-  landLight:        "ja37/effect/landing-light",
-  landLightALS:     "sim/rendering/als-secondary-lights/use-landing-light",
-  landLightALS2:    "sim/rendering/als-secondary-lights/use-alt-landing-light",
-  landLightALSHead: "sim/rendering/als-secondary-lights/landing-light1-offset-deg",
-  landLightSupport: "ja37/supported/landing-light",
   lockPassive:      "/autopilot/locks/passive-mode",
   mach:             "velocities/mach",
   mass1:            "fdm/jsbsim/inertia/pointmass-weight-lbs[1]",
@@ -121,17 +107,16 @@ input = {
   explode:          "damage/sounds/explode-on",
   pilotG:           "ja37/accelerations/pilot-G",
   pneumatic:        "fdm/jsbsim/systems/fuel/pneumatics/serviceable",
-  rad_alt:          "position/altitude-agl-ft",
+  rad_alt:          "instrumentation/radar-altimeter/radar-altitude-ft",
+  rad_alt_ready:    "instrumentation/radar-altimeter/ready",
   rainNorm:         "environment/rain-norm",
   rainVol:          "ja37/sound/rain-volume",
   replay:           "sim/replay/replay-state",
   reversed:         "/engines/engine/is-reversed",
   rmActive:         "/autopilot/route-manager/active",
-  rmBearing:        "/autopilot/route-manager/wp/bearing-deg",
-  rmBearingRel:     "autopilot/route-manager/wp/bearing-deg-rel",
-  rmDist:           "autopilot/route-manager/wp/dist",
-  rmDistKm:         "autopilot/route-manager/wp/dist-km",
   RMWaypointBearing:"autopilot/route-manager/wp/bearing-deg",
+  landingMode:      "ja37/hud/landing-mode",
+  approachMode:     "ja37/avionics/approach",
   roll:             "/instrumentation/attitude-indicator/indicated-roll-deg",
   sceneRed:         "/rendering/scene/diffuse/red",
   servFire:         "engines/engine[0]/fire/serviceable",
@@ -140,7 +125,6 @@ input = {
   speedTrueKt:      "fdm/jsbsim/velocities/vtrue-kts",
   speedMach:        "/instrumentation/airspeed-indicator/indicated-mach",
   speedWarn:        "ja37/sound/speed-on",
-  srvHead:          "instrumentation/heading-indicator/serviceable",
   starter:          "controls/engines/engine[0]/starter-cmd",
   subAmmo2:         "ai/submodels/submodel[2]/count", 
   subAmmo3:         "ai/submodels/submodel[3]/count", 
@@ -173,6 +157,8 @@ input = {
   wow0:             "fdm/jsbsim/gear/unit[0]/WOW",
   wow1:             "fdm/jsbsim/gear/unit[1]/WOW",
   wow2:             "fdm/jsbsim/gear/unit[2]/WOW",
+  waypointType:     "instrumentation/waypoint-indicator/type",
+  waypointNumber:   "instrumentation/waypoint-indicator/number",
   zAccPilot:        "accelerations/pilot/z-accel-fps_sec",
   terrainOverr:     "instrumentation/terrain-override",
   fuseGVV:          "ja37/fuses/gvv",
@@ -192,7 +178,6 @@ input = {
   tonePreL2: "ja37/sound/tones/load-pre-2",
   tonePreL1: "ja37/sound/tones/load-pre-1",
 };
-
 
 var Saab37 = {
   new: func {
@@ -242,7 +227,6 @@ var Saab37 = {
 
     if(input.replay.getValue() == TRUE) {
       # replay is active, skip rest of loop.
-      #settimer(func me.update_loop(), LOOP_STANDARD_RATE);
       return;
     }
 
@@ -254,42 +238,7 @@ var Saab37 = {
       input.fullInit.setBoolValue(FALSE);
     }
 
-     ## Sets fuel gauge needles rotation ##
-     
-     if(input.tank8LvlNorm.getValue() != nil) {
-       #input.fuelNeedleB.setDoubleValue(input.tank8LvlNorm.getValue()*230);
-       input.fuelNeedleB.setDoubleValue(0);
-     }     
-
-    me.current = input.tank0LvlGal.getValue()
-                + input.tank1LvlGal.getValue()
-                + input.tank2LvlGal.getValue()
-                + input.tank3LvlGal.getValue()
-                + input.tank4LvlGal.getValue()
-                + input.tank5LvlGal.getValue()
-                + input.tank6LvlGal.getValue()
-                + input.tank7LvlGal.getValue()
-                + input.tank8LvlGal.getValue();
-
-
-    input.fuelNeedleF.setDoubleValue((me.current / total_fuel) *230);
-    input.fuelRatio.setDoubleValue(me.current / total_fuel);
-
-    # fuel warning annuciator
-    if((me.current / total_fuel) < 0.24) {# warning at 24% as per sources
-      input.fuelWarning.setBoolValue(TRUE);
-    } else {
-      input.fuelWarning.setBoolValue(FALSE);
-    }
-    if((me.current / total_fuel) < getprop("ja37/systems/fuel-warning-extra-percent")/100) {# warning at custom as per sources
-      setprop("ja37/sound/fuel-low-2-on",TRUE);
-    } else {
-      setprop("ja37/sound/fuel-low-2-on",FALSE);
-    }
-
-    input.fuelInternalRatio.setDoubleValue(me.current / total_fuel);
-    
-    if (me.current > 0 and input.tank8LvlNorm.getValue() > 0) {
+    if (input.fuelRatio.getValue() > 0 and input.tank8LvlNorm.getValue() > 0) {
       bingoFuel = FALSE;
     } else {
       bingoFuel = TRUE;
@@ -313,10 +262,10 @@ var Saab37 = {
 
     # low speed warning (as per manual page 279 in JA37C part 1)
     me.lowSpeed = FALSE;
-    if (auto.modeT < 2 and (input.speedKt.getValue() * 1.85184) < 375 and input.wow1.getValue() == FALSE) {
+    if (!input.indAT.getBoolValue() and (input.speedKt.getValue() * 1.85184) < 375 and input.wow1.getValue() == FALSE) {
       if (input.indAltMeter.getValue() < 1200) {
         if (
-          (input.gearsPos.getValue() == 1 and (getprop("controls/altimeter-radar")==TRUE?(input.rad_alt.getValue() * FT2M) > 30:(input.indAltFt.getValue() * FT2M) > 30))
+          (input.gearsPos.getValue() == 1 and (input.rad_alt_ready.getBoolValue()?(input.rad_alt.getValue() * FT2M) > 30:(input.indAltFt.getValue() * FT2M) > 30))
           or input.gearsPos.getValue() != 1) {
           if (getprop("fdm/jsbsim/fcs/throttle-pos-deg") < 19 or input.reversed.getValue() == TRUE or input.engineRunning.getValue() == FALSE) {
             me.lowSpeed = TRUE;
@@ -357,26 +306,33 @@ var Saab37 = {
       input.aeroSmoke.setIntValue(1);
     }
 
-    me.DME = input.dme.getValue() != "---" and input.dme.getValue() != "" and input.dmeDist.getValue() != nil;
-    
-    # distance indicator
-    if (me.DME == TRUE) {
-      me.distance = input.dmeDist.getValue() * 1.852;
-      if (me.distance > 40) {
-        me.distance = 40;
+    # AJS waypoint indicator
+    if(input.rmActive.getBoolValue()) {
+      me.wp = flightplan().currentWP();
+      me.wp_index = me.wp.index;
+      if(me.wp_index == 0) {
+        # takeoff
+        input.waypointType.setIntValue(1);
+        input.waypointNumber.setIntValue(11);
+      } elsif(me.wp.wp_role == "approach") {
+        # landing
+        if(!input.landingMode.getBoolValue()) {
+          input.waypointType.setIntValue(1);
+        } elsif(!input.approachMode.getBoolValue()) {
+          input.waypointType.setIntValue(2);
+        } else {
+          input.waypointType.setIntValue(3);
+        }
+        input.waypointNumber.setIntValue(1);
+      } else {
+        # Can only correctly display waypoint 1-9
+        if(me.wp_index > 9) me.wp_index = 10;
+        input.waypointType.setIntValue(4);
+        input.waypointNumber.setIntValue(me.wp_index);
       }
-      input.rmDistKm.setDoubleValue(me.distance);
-    } elsif (input.rmActive.getValue() == TRUE and input.rmDist.getValue() != nil) {
-      # converts waypoint distance to km, for use in the distance indicator. 1nm = 1.852km = 1852 meters.
-      input.rmDistKm.setDoubleValue(input.rmDist.getValue() * 1.852 );
     } else {
-      input.rmDistKm.setDoubleValue(0);
-    }
-
-    # radar compass
-    if (input.rmActive.getValue() == TRUE and input.srvHead.getValue() == TRUE and input.rmBearing.getValue() != nil) {
-      # sets the proper degree of the yellow waypoint heading indicator on the compass that surrounds the radar.
-      input.rmBearingRel.setDoubleValue(input.rmBearing.getValue() - input.headingMagn.getValue());
+      input.waypointType.setIntValue(0);
+      input.waypointNumber.setIntValue(0);
     }
 
     #if(getprop("ja37/systems/variant") != 0 and getprop("/instrumentation/radar/range") == 180000) {
@@ -457,29 +413,12 @@ var Saab37 = {
       setprop("/sim/gui/dialogs/map-canvas/draw-TFC", 0);
     }
     setprop("/sim/rendering/als-filters/use-filtering", 1);
-    #settimer(func me.update_loop(), LOOP_STANDARD_RATE);
-    
-    setprop("ja37/accelerations/pilot-G-max", math.max(getprop("ja37/accelerations/pilot-G-lag"),getprop("ja37/accelerations/pilot-G-max")));
   },
 
   # fast updating loop
   speed_loop: func {
-    # switch on and off ALS landing lights
-    if(input.landLightSupport.getValue() and 0) {
-        if(input.viewInternal.getValue()) {
-            input.landLightALS.setBoolValue(input.taxiLight.getValue() > 0);
-            input.landLightALS2.setBoolValue(input.landLight.getValue() > 0);
-            # Rotate taxi light
-            input.landLightALSHead.setValue(input.gearSteerNorm.getValue() * 30);
-        } else {
-            input.landLightALS.setBoolValue(FALSE);
-            input.landLightALS2.setBoolValue(FALSE);
-        }
-    }
-
     if(input.replay.getValue() == TRUE) {
       # replay is active, skip rest of loop.
-      #settimer(func me.speed_loop(), LOOP_FAST_RATE);
       return;
     }
 
@@ -493,6 +432,9 @@ var Saab37 = {
     } else {
       input.augmentation.setBoolValue(FALSE);
     }
+
+    # RWR
+    rwr.update_rwr();
 
     # Animating engine fire
     if (me.n1 > 100) me.n1 = 100;
@@ -548,7 +490,6 @@ var Saab37 = {
     
     me.aural();
     me.headingBug();
-    #settimer(func me.speed_loop(), LOOP_FAST_RATE);
   },
   
   aural: func {
@@ -701,70 +642,13 @@ var Saab37 = {
     } 
   },
 
-  tils: func {
-    #TILS (not used anymore)
-    if(input.TILS.getValue() == TRUE and power.prop.acMainBool.getValue()) {#  and canvas_HUD != nil and canvas_HUD.mode == canvas_HUD.LANDING
-      var icao = getprop("sim/tower/airport-id");
-      var runways = airportinfo(icao).runways;
-      var closestRunway = -1;
-      var secondClosestRunway = -1;
-      var closestDistance = 10000000;
-      #print();
-      foreach(i ; keys(runways)) {
-        var r = runways[i];
-        if (r.ils != nil) {
-          var coord = geo.Coord.new();
-          coord.set_latlon(r.lat, r.lon);
-          var distance = geo.aircraft_position().distance_to(coord);
-          #print(icao~" runway "~i~" has ILS. Distance "~distance~" meter.");
-          if(distance < closestDistance) {
-            if (closestDistance - distance < 200) {
-              secondClosestRunway = closestRunway;
-            } else {
-              secondClosestRunway = -1;
-            }
-            closestDistance = distance;
-            closestRunway = i;
-          } else {
-            if (distance - closestDistance < 200) {
-              secondClosestRunway = i;
-            }
-          }
-        } else {
-          #print(icao~" runway "~i~" has not.");
-        }
-      }
-      if(closestRunway != -1) {
-        var oldFreq = TILSprev==FALSE?0.0:getprop("instrumentation/nav[0]/frequencies/selected-mhz");
-        var newFreq = runways[closestRunway].ils.frequency / 100;
-
-        if (oldFreq != newFreq) {
-          setprop("instrumentation/nav[0]/frequencies/selected-mhz", newFreq);
-          var standbyStr = "";
-          if (secondClosestRunway != -1) {
-            standbyStr = " (Standby: "~secondClosestRunway~")";
-            setprop("instrumentation/nav[0]/frequencies/standby-mhz", runways[secondClosestRunway].ils.frequency / 100);
-          }
-          notice("TILS tuned to "~icao~" "~closestRunway~standbyStr, 25, 6);
-        }
-      }
-      TILSprev = TRUE;
-      setprop("ja37/hud/TILS-on", TRUE);
-    } else {
-      setprop("ja37/hud/TILS-on", FALSE);
-      TILSprev = FALSE;
-    }
-  },
-
   # slow updating loop
   slow_loop: func {
     if(input.replay.getValue() == TRUE) {
       # replay is active, skip rest of loop.
-      #settimer(func me.slow_loop(), LOOP_SLOW_RATE);
       return;
     }
 
-    
 
     if (getprop("sim/replay/replay-state") == 0 and power.prop.dcSecondBool.getValue()) {
       setprop("ja37/avionics/record-on", TRUE);
@@ -806,8 +690,6 @@ var Saab37 = {
     if (getprop("ja37/systems/input-controls-flight") == FALSE and rand() > 0.95) {
       ja37.notice("Flight ctrls OFF. Press key 'y' to reactivate.");
     }
-
-    #settimer(func me.slow_loop(), LOOP_SLOW_RATE);
   },
 
   environment: func {
@@ -1004,12 +886,10 @@ var Saab37 = {
     # Notice some loop timers are slightly changed to spread out calls,
     # so that many loops are not called in same frame.
     #
-    me.loop_slow     = maketimer(1.50, me, func me.slow_loop());
+    me.loop_slow     = maketimer(LOOP_SLOW_RATE, me, func me.slow_loop());
     me.loop_fast     = maketimer(0.06, me, func me.speed_loop());
     me.loop_saab37   = maketimer(0.25, me, func me.update_loop());
-    #me.loop_ct       = maketimer(2, me, func code_ct());
-    #me.loop_not      = maketimer(60, me, func not());
-    
+
     # displays commons
     displays.common.loop();
     displays.common.loopFast();
@@ -1017,12 +897,7 @@ var Saab37 = {
     me.loop_commonF  = maketimer(0.05, displays.common, func displays.common.loopFast());
     me.loop_common.start();
     me.loop_commonF.start();
-    
-    # autopilot
-    me.loop_ap       = maketimer(0.20, me, func auto.apLoop());
-    me.loop_hydrLost = maketimer(0.50, me, func auto.hydr1Lost());
 
-    me.loop_chrono   = maketimer(0.26, me, func ja37.chrono_update());
     me.loop_land     = maketimer(0.27, land.lander, func land.lander.loop());
     me.loop_nav      = maketimer(0.28, me, func navigation.heading_indicator());
 
@@ -1033,95 +908,82 @@ var Saab37 = {
     me.loop_saab37.start();
     me.loop_fast.start();
     me.loop_slow.start();
-    #me.loop_ct.start();
-    #me.loop_not.start();
-    me.loop_ap.start();
-    me.loop_hydrLost.start();    
-    me.loop_chrono.start();
     me.loop_land.start();
     me.loop_nav.start();
     me.loop_stores.start();
 
-    if(getprop("ja37/supported/radar") == TRUE) {
-      # radar
-      radar_logic.radarLogic = radar_logic.RadarLogic.new();
-      me.loop_logic  = maketimer(0.24, radar_logic.radarLogic, func radar_logic.radarLogic.loop());
-      #me.loop_logic.start();
+    # radar
+    radar_logic.radarLogic = radar_logic.RadarLogic.new();
+    me.loop_logic  = maketimer(0.24, radar_logic.radarLogic, func radar_logic.radarLogic.loop());
+    #me.loop_logic.start();
 
-      # immatriculation
-      call(func {# issue on some fast linux PCs..
-        callsign.callInit();
-        me.loop_callsign = maketimer(1, me, func callsign.loop_callsign());
-        me.loop_callsign.start();
-      },nil,var err=[]);
-      if(size(err)) {
-        foreach(var i;err) {
-          print(i);
-        }
+    # immatriculation
+    call(func {# issue on some fast linux PCs..
+      callsign.callInit();
+      me.loop_callsign = maketimer(1, me, func callsign.loop_callsign());
+      me.loop_callsign.start();
+    },nil,var err=[]);
+    if(size(err)) {
+      foreach(var i;err) {
+        print(i);
       }
+    }
 
-      if (getprop("ja37/supported/canvas") == TRUE and getprop("ja37/systems/variant") > 0) {
-        # CI display
-        rdr.scope = rdr.radar.new();
-        me.loop_radar_screen = maketimer(0.10, rdr.scope, func rdr.scope.update());
-        me.loop_radar_screen.start();
-      }
+    if (getprop("ja37/systems/variant") != 0) {
+      # CI display
+      rdr.scope = rdr.radar.new();
+      me.loop_radar_screen = maketimer(0.10, rdr.scope, func rdr.scope.update());
+      me.loop_radar_screen.start();
     }
 
     # flightplans
     route.poly_start();
 
-    if (getprop("ja37/supported/canvas") == TRUE) {
-      if (getprop("ja37/systems/variant") == 0) {
-        # TI
-        # must not start looping before route has been init
-        TI.setupCanvas();
-        TI.ti = TI.TI.new();
-        TI.ti.loop();#must be first due to me.rootCenterY
-        me.loop_ti  = maketimer(0.50, TI.ti, func TI.ti.loop());
-        me.loop_tiF = maketimer(0.05, TI.ti, func TI.ti.loopFast());
-        me.loop_tiS = maketimer(180, TI.ti, func TI.ti.loopSlow());
-        me.loop_ti.start();
-        me.loop_tiF.start();
-        me.loop_tiS.start();
+    if (getprop("ja37/systems/variant") == 0) {
+      # TI
+      # must not start looping before route has been init
+      TI.setupCanvas();
+      TI.ti = TI.TI.new();
+      TI.ti.loop();#must be first due to me.rootCenterY
+      me.loop_ti  = maketimer(0.50, TI.ti, func TI.ti.loop());
+      me.loop_tiF = maketimer(0.05, TI.ti, func TI.ti.loopFast());
+      me.loop_tiS = maketimer(180, TI.ti, func TI.ti.loopSlow());
+      me.loop_ti.start();
+      me.loop_tiF.start();
+      me.loop_tiS.start();
 
-        # MI
-        # must be after TI
-        MI.setupCanvas();
-        MI.mi = MI.MI.new();
-        me.loop_mi  = maketimer(0.15, MI.mi, func MI.mi.loop());
-        me.loop_mi.start();
-      }
-
-      # HUD:
-      canvas_HUD.hud_pilot = canvas_HUD.HUDnasal.new({"node": "hud", "texture": "hud.png"});
-      me.loop_hud = maketimer(0.05, canvas_HUD.hud_pilot, func canvas_HUD.hud_pilot.update());
-      #me.loop_ir  = maketimer(1.5, me, func canvas_HUD.IR_loop());
-
-      me.loop_hud.start();
-      #me.loop_ir.start();
-
-      if (getprop("ja37/systems/variant") == 0) {
-        # data-panel
-        dap.callInit();
-        me.loop_dap  = maketimer(1, me, func dap.loop_main());
-        me.loop_dap.start();
-        me.loop_plan  = maketimer(0.5, me, func route.Polygon.loop());
-        me.loop_plan.start();
-      }
-      
-    }
-    if(getprop("ja37/supported/radar") == TRUE) {
-      # radar (must be called after TI)
-      me.loop_logic.start();
+      # MI
+      # must be after TI
+      MI.setupCanvas();
+      MI.mi = MI.MI.new();
+      me.loop_mi  = maketimer(0.15, MI.mi, func MI.mi.loop());
+      me.loop_mi.start();
     }
 
-    if (getprop("ja37/supported/fire") == TRUE) {
-      # fire
-      failureSys.init_fire();
-      me.loop_fire  = maketimer(1, me, func failureSys.loop_fire());
-      me.loop_fire.start();
+    # HUD:
+    canvas_HUD.hud_pilot = canvas_HUD.HUDnasal.new({"node": "hud", "texture": "hud.png"});
+    me.loop_hud = maketimer(0.05, canvas_HUD.hud_pilot, func canvas_HUD.hud_pilot.update());
+    #me.loop_ir  = maketimer(1.5, me, func canvas_HUD.IR_loop());
+
+    me.loop_hud.start();
+    #me.loop_ir.start();
+
+    if (getprop("ja37/systems/variant") == 0) {
+      # data-panel
+      dap.callInit();
+      me.loop_dap  = maketimer(1, me, func dap.loop_main());
+      me.loop_dap.start();
+      me.loop_plan  = maketimer(0.5, me, func route.Polygon.loop());
+      me.loop_plan.start();
     }
+    # radar (must be called after TI)
+    me.loop_logic.start();
+
+    # fire
+    failureSys.init_fire();
+    me.loop_fire  = maketimer(1, me, func failureSys.loop_fire());
+    me.loop_fire.start();
+
     me.loop_test  = maketimer(0.25, me, func testing.loop());
     me.loop_test.start();
   },
@@ -1133,12 +995,10 @@ var Saab37 = {
     # Notice some loop timers are slightly changed to spread out calls,
     # so that many loops are not called in same frame.
     #
-    me.loop_slow     = maketimer(1.50, me, func {timer.timeLoop("ja37-slow", me.slow_loop,me);});
+    me.loop_slow     = maketimer(LOOP_SLOW_RATE, me, func {timer.timeLoop("ja37-slow", me.slow_loop,me);});
     me.loop_fast     = maketimer(0.06, me, func {timer.timeLoop("ja37-fast", me.speed_loop,me);});
     me.loop_saab37   = maketimer(0.25, me, func {timer.timeLoop("ja37-medium", me.update_loop,me);});
-    #me.loop_ct       = maketimer(2, me, func code_ct());
-    #me.loop_not      = maketimer(60, me, func not());
-    
+
     # displays commons
     displays.common.loop();
     displays.common.loopFast();
@@ -1146,12 +1006,7 @@ var Saab37 = {
     me.loop_commonF  = maketimer(0.05, displays.common, func {timer.timeLoop("common-fast", displays.common.loopFast,displays.common);});
     me.loop_common.start();
     me.loop_commonF.start();
-    
-    # autopilot
-    me.loop_ap       = maketimer(0.20, me, func {timer.timeLoop("Autopilot", auto.apLoop,me);});
-    me.loop_hydrLost = maketimer(0.50, me, func {timer.timeLoop("Autopilot-power", auto.hydr1Lost,me);});
 
-    me.loop_chrono   = maketimer(0.26, me, func {timer.timeLoop("chronometer", ja37.chrono_update,me);});
     me.loop_land     = maketimer(0.27, land.lander, func {timer.timeLoop("landing-mode", land.lander.loop,land.lander);});
     me.loop_nav      = maketimer(0.28, me, func {timer.timeLoop("heading-indicator", navigation.heading_indicator,me);});
 
@@ -1162,95 +1017,84 @@ var Saab37 = {
     me.loop_saab37.start();
     me.loop_fast.start();
     me.loop_slow.start();
-    #me.loop_ct.start();
-    #me.loop_not.start();
     me.loop_ap.start();
     me.loop_hydrLost.start();    
-    me.loop_chrono.start();
     me.loop_land.start();
     me.loop_nav.start();
     me.loop_stores.start();
 
-    if(getprop("ja37/supported/radar") == TRUE) {
-      # radar
-      radar_logic.radarLogic = radar_logic.RadarLogic.new();
-      me.loop_logic  = maketimer(0.24, radar_logic.radarLogic, func {timer.timeLoop("Radar", radar_logic.radarLogic.loop,radar_logic.radarLogic);});
-      #me.loop_logic.start();
+    # radar
+    radar_logic.radarLogic = radar_logic.RadarLogic.new();
+    me.loop_logic  = maketimer(0.24, radar_logic.radarLogic, func {timer.timeLoop("Radar", radar_logic.radarLogic.loop,radar_logic.radarLogic);});
+    #me.loop_logic.start();
 
-      # immatriculation
-      call(func {# issue on some fast linux PCs..
-        callsign.callInit();
-        me.loop_callsign = maketimer(1, me, func {timer.timeLoop("Callsign", callsign.loop_callsign,me);});
-        me.loop_callsign.start();
-      },nil,var err=[]);
-      if(size(err)) {
-        foreach(var i;err) {
-          print(i);
-        }
+    # immatriculation
+    call(func {# issue on some fast linux PCs..
+      callsign.callInit();
+      me.loop_callsign = maketimer(1, me, func {timer.timeLoop("Callsign", callsign.loop_callsign,me);});
+      me.loop_callsign.start();
+    },nil,var err=[]);
+    if(size(err)) {
+      foreach(var i;err) {
+        print(i);
       }
+    }
 
-      if (getprop("ja37/supported/canvas") == TRUE and getprop("ja37/systems/variant") > 0) {
-        # CI display
-        rdr.scope = rdr.radar.new();
-        me.loop_radar_screen = maketimer(0.10, rdr.scope, func rdr.scope.update());
-        me.loop_radar_screen.start();
-      }
+    if (getprop("ja37/systems/variant") != 0) {
+      # CI display
+      rdr.scope = rdr.radar.new();
+      me.loop_radar_screen = maketimer(0.10, rdr.scope, func rdr.scope.update());
+      me.loop_radar_screen.start();
     }
 
     # flightplans
     route.poly_start();
 
-    if (getprop("ja37/supported/canvas") == TRUE) {
-      if (getprop("ja37/systems/variant") == 0) {
-        # TI
-        # must not start looping before route has been init
-        TI.setupCanvas();
-        TI.ti = TI.TI.new();
-        TI.ti.loop();#must be first due to me.rootCenterY
-        me.loop_ti  = maketimer(0.50, TI.ti, func {timer.timeLoop("TI-medium", TI.ti.loop,    TI.ti);});
-        me.loop_tiF = maketimer(0.05, TI.ti, func {timer.timeLoop("TI-fast",   TI.ti.loopFast,TI.ti);});
-        me.loop_tiS = maketimer(180, TI.ti,  func {timer.timeLoop("TI-slow",   TI.ti.loopSlow,TI.ti);});
-        me.loop_ti.start();
-        me.loop_tiF.start();
-        me.loop_tiS.start();
+    if (getprop("ja37/systems/variant") == 0) {
+      # TI
+      # must not start looping before route has been init
+      TI.setupCanvas();
+      TI.ti = TI.TI.new();
+      TI.ti.loop();#must be first due to me.rootCenterY
+      me.loop_ti  = maketimer(0.50, TI.ti, func {timer.timeLoop("TI-medium", TI.ti.loop,    TI.ti);});
+      me.loop_tiF = maketimer(0.05, TI.ti, func {timer.timeLoop("TI-fast",   TI.ti.loopFast,TI.ti);});
+      me.loop_tiS = maketimer(180, TI.ti,  func {timer.timeLoop("TI-slow",   TI.ti.loopSlow,TI.ti);});
+      me.loop_ti.start();
+      me.loop_tiF.start();
+      me.loop_tiS.start();
 
-        # MI
-        # must be after TI
-        MI.setupCanvas();
-        MI.mi = MI.MI.new();
-        me.loop_mi  = maketimer(0.15, MI.mi, func {timer.timeLoop("MI", MI.mi.loop,MI.mi);});
-        me.loop_mi.start();
-      }
-
-      # HUD:
-      canvas_HUD.hud_pilot = canvas_HUD.HUDnasal.new({"node": "hud", "texture": "hud.png"});
-      me.loop_hud = maketimer(0.05, canvas_HUD.hud_pilot, func {timer.timeLoop("HUD", canvas_HUD.hud_pilot.update,canvas_HUD.hud_pilot);});
-      #me.loop_ir  = maketimer(1.5, me, func canvas_HUD.IR_loop());
-
-      me.loop_hud.start();
-      #me.loop_ir.start();
-
-      if (getprop("ja37/systems/variant") == 0) {
-        # data-panel
-        dap.callInit();
-        me.loop_dap  = maketimer(1, me, func {timer.timeLoop("DAP", dap.loop_main,me);});
-        me.loop_dap.start();
-        me.loop_plan  = maketimer(0.5, me, func {timer.timeLoop("Plans", route.Polygon.loop,me);});
-        me.loop_plan.start();
-      }
-      
-    }
-    if(getprop("ja37/supported/radar") == TRUE) {
-      # radar (must be called after TI)
-      me.loop_logic.start();
+      # MI
+      # must be after TI
+      MI.setupCanvas();
+      MI.mi = MI.MI.new();
+      me.loop_mi  = maketimer(0.15, MI.mi, func {timer.timeLoop("MI", MI.mi.loop,MI.mi);});
+      me.loop_mi.start();
     }
 
-    if (getprop("ja37/supported/fire") == TRUE) {
-      # fire
-      failureSys.init_fire();
-      me.loop_fire  = maketimer(1, me, func {timer.timeLoop("Failure", failureSys.loop_fire,me);});
-      me.loop_fire.start();
+    # HUD:
+    canvas_HUD.hud_pilot = canvas_HUD.HUDnasal.new({"node": "hud", "texture": "hud.png"});
+    me.loop_hud = maketimer(0.05, canvas_HUD.hud_pilot, func {timer.timeLoop("HUD", canvas_HUD.hud_pilot.update,canvas_HUD.hud_pilot);});
+    #me.loop_ir  = maketimer(1.5, me, func canvas_HUD.IR_loop());
+
+    me.loop_hud.start();
+    #me.loop_ir.start();
+
+    if (getprop("ja37/systems/variant") == 0) {
+      # data-panel
+      dap.callInit();
+      me.loop_dap  = maketimer(1, me, func {timer.timeLoop("DAP", dap.loop_main,me);});
+      me.loop_dap.start();
+      me.loop_plan  = maketimer(0.5, me, func {timer.timeLoop("Plans", route.Polygon.loop,me);});
+      me.loop_plan.start();
     }
+    # radar (must be called after TI)
+    me.loop_logic.start();
+
+    # fire
+    failureSys.init_fire();
+    me.loop_fire  = maketimer(1, me, func {timer.timeLoop("Failure", failureSys.loop_fire,me);});
+    me.loop_fire.start();
+
     me.loop_test  = maketimer(0.25, me, func {timer.timeLoop("Test", testing.loop,me);});
     me.loop_test.start();
   },
@@ -1266,15 +1110,6 @@ var saab37 = Saab37.new();
 
 
 
-
-
-
-
-
-
-var resetMaxG = func {
-  setprop("ja37/accelerations/pilot-G-max", -4);
-}
 
 
 
@@ -1419,135 +1254,15 @@ var test_support = func {
   var major = num(version[0]);
   var minor = num(version[1]);
   var detail = num(version[2]);
-  if (major < 2) {
-    notice("Saab 37 is only supported in Flightgear version 2.8 and upwards. Sorry.");
-      setprop("ja37/supported/radar", FALSE);
-      setprop("ja37/supported/canvas", FALSE);
-      setprop("ja37/supported/options", FALSE);
-      setprop("ja37/supported/old-custom-fails", 0);
-      setprop("ja37/supported/popuptips", 0);
-      setprop("ja37/supported/landing-light", FALSE);
-      setprop("ja37/supported/crash-system", 0);
-      setprop("ja37/supported/ubershader", FALSE);
-      setprop("ja37/supported/lightning", FALSE);
-      setprop("ja37/supported/fire", FALSE);
-      setprop("ja37/supported/new-marker", FALSE);
-      setprop("ja37/supported/picking", FALSE);
-      setprop("ja37/supported/failEvents", FALSE);
-      setprop("ja37/supported/multiple-flightplans", FALSE);
-  } elsif (major == 2) {
-    setprop("ja37/supported/landing-light", FALSE);
-    setprop("ja37/supported/lightning", FALSE);
-    setprop("ja37/supported/fire", FALSE);
-    setprop("ja37/supported/new-marker", FALSE);
+  if (major < 2016) {
+    notice("Saab 37 is only supported in Flightgear version 2016.1.1 and upwards. Sorry.");
     setprop("ja37/supported/picking", FALSE);
-    setprop("ja37/supported/failEvents", FALSE);
     setprop("ja37/supported/multiple-flightplans", FALSE);
-    if(minor < 7) {
-      notice("Saab 37 is only supported in Flightgear version 2.8 and upwards. Sorry.");
-      setprop("ja37/supported/radar", FALSE);
-      setprop("ja37/supported/canvas", FALSE);
-      setprop("ja37/supported/options", FALSE);
-      setprop("ja37/supported/old-custom-fails", 0);
-      setprop("ja37/supported/popuptips", 0);
-      setprop("ja37/supported/crash-system", 0);
-      setprop("ja37/supported/ubershader", FALSE);
-    } elsif(minor < 9) {
-      notice("Saab 37 Canvas Radar and HUD is only supported in Flightgear version 2.10 and upwards. They have been disabled.");
-      setprop("ja37/supported/radar", FALSE);
-      setprop("ja37/supported/canvas", FALSE);
-      setprop("ja37/supported/options", FALSE);
-      setprop("ja37/supported/old-custom-fails", 0);
-      setprop("ja37/hud/mode", 0);
-      setprop("ja37/supported/popuptips", 0);
-      setprop("ja37/supported/crash-system", 0);
-      setprop("ja37/supported/ubershader", FALSE);
-    } elsif(minor < 11) {
-      setprop("ja37/supported/radar", TRUE);
-      setprop("ja37/supported/canvas", TRUE);
-      setprop("ja37/supported/options", FALSE);
-      setprop("ja37/supported/old-custom-fails", 0);
-      setprop("ja37/supported/popuptips", 0);
-      setprop("ja37/supported/crash-system", 0);
-      setprop("ja37/supported/ubershader", TRUE);
-    } else {
-      setprop("ja37/supported/radar", TRUE);
-      setprop("ja37/supported/canvas", TRUE);
-      setprop("ja37/supported/options", FALSE);
-      setprop("ja37/supported/old-custom-fails", 0);
-      setprop("ja37/supported/popuptips", 1);
-      setprop("ja37/supported/crash-system", 0);
-      setprop("ja37/supported/ubershader", TRUE);
-    }
-  } elsif (major == 3) {
-    setprop("ja37/supported/options", TRUE);
-    setprop("ja37/supported/radar", TRUE);
-    setprop("ja37/supported/canvas", TRUE);
-    setprop("ja37/supported/old-custom-fails", 2);
-    setprop("ja37/supported/landing-light", TRUE);
-    setprop("ja37/supported/popuptips", 2);
-    setprop("ja37/supported/crash-system", 1);
-    setprop("ja37/supported/ubershader", TRUE);
-    setprop("ja37/supported/lightning", TRUE);
-    setprop("ja37/supported/fire", FALSE);
-    setprop("ja37/supported/new-marker", FALSE);
-    setprop("ja37/supported/picking", FALSE);
-    setprop("ja37/supported/failEvents", FALSE);
-    setprop("ja37/supported/multiple-flightplans", FALSE);
-    if (minor == 0) {
-      setprop("ja37/supported/old-custom-fails", 0);
-      setprop("ja37/supported/landing-light", FALSE);
-      setprop("ja37/supported/popuptips", 1);
-      setprop("ja37/supported/crash-system", 0);
-      setprop("ja37/supported/lightning", FALSE);
-    } elsif (minor <= 2) {
-      setprop("ja37/supported/old-custom-fails", 1);
-      setprop("ja37/supported/landing-light", FALSE);
-      setprop("ja37/supported/popuptips", 1);
-      setprop("ja37/supported/lightning", FALSE);
-    } elsif (minor <= 4) {
-      setprop("ja37/supported/old-custom-fails", 1);
-      setprop("ja37/supported/popuptips", 1);
-      setprop("ja37/supported/lightning", FALSE);
-      setprop("ja37/supported/fire", TRUE);
-      setprop("ja37/supported/failEvents", TRUE);
-    } elsif (minor <= 6) {
-      setprop("ja37/supported/lightning", FALSE);
-      setprop("ja37/supported/fire", TRUE);
-      setprop("ja37/supported/failEvents", TRUE);
-    }
   } elsif (major == 2016) {
-    setprop("ja37/supported/options", TRUE);
-    setprop("ja37/supported/radar", TRUE);
-    setprop("ja37/supported/canvas", TRUE);
-    setprop("ja37/supported/old-custom-fails", 2);
-    setprop("ja37/supported/landing-light", TRUE);
-    setprop("ja37/supported/popuptips", 2);
-    setprop("ja37/supported/crash-system", 1);
-    setprop("ja37/supported/ubershader", TRUE);
-    setprop("ja37/supported/lightning", TRUE);
-    setprop("ja37/supported/fire", TRUE);
-    setprop("ja37/supported/new-marker", FALSE);
     setprop("ja37/supported/picking", FALSE);
-    setprop("ja37/supported/failEvents", TRUE);
     setprop("ja37/supported/multiple-flightplans", FALSE);
-    if (minor >= 2) {
-      setprop("ja37/supported/new-marker", TRUE);
-    }
   } elsif (major == 2017) {
-    setprop("ja37/supported/options", TRUE);
-    setprop("ja37/supported/radar", TRUE);
-    setprop("ja37/supported/canvas", TRUE);
-    setprop("ja37/supported/old-custom-fails", 2);
-    setprop("ja37/supported/landing-light", TRUE);
-    setprop("ja37/supported/popuptips", 2);
-    setprop("ja37/supported/crash-system", 1);
-    setprop("ja37/supported/ubershader", TRUE);
-    setprop("ja37/supported/lightning", TRUE);
-    setprop("ja37/supported/fire", TRUE);
-    setprop("ja37/supported/new-marker", FALSE);
     setprop("ja37/supported/picking", FALSE);
-    setprop("ja37/supported/failEvents", TRUE);
     setprop("ja37/supported/multiple-flightplans", FALSE);
     if (minor == 2) {
       setprop("ja37/supported/picking", TRUE);
@@ -1564,19 +1279,7 @@ var test_support = func {
     }
   } else {
     # future proof
-    setprop("ja37/supported/options", TRUE);
-    setprop("ja37/supported/radar", TRUE);
-    setprop("ja37/supported/canvas", TRUE);
-    setprop("ja37/supported/old-custom-fails", 2);
-    setprop("ja37/supported/landing-light", TRUE);
-    setprop("ja37/supported/popuptips", 2);
-    setprop("ja37/supported/crash-system", 1);
-    setprop("ja37/supported/ubershader", TRUE);
-    setprop("ja37/supported/lightning", TRUE);
-    setprop("ja37/supported/fire", TRUE);
-    setprop("ja37/supported/new-marker", TRUE);
     setprop("ja37/supported/picking", TRUE);
-    setprop("ja37/supported/failEvents", TRUE);
     setprop("ja37/supported/multiple-flightplans", TRUE);
   }
   setprop("ja37/supported/initialized", TRUE);
@@ -1610,8 +1313,6 @@ var main_init = func {
 
 #  aircraft.data.add("ja37/radar/enabled",
 #                    "ja37/hud/units-metric",
-#                    "ja37/hud/mode",
-#                    "ja37/hud/bank-indicator",
 #                    "ja37/autoReverseThrust",
 #                    "ja37/hud/stroke-linewidth",
 #                    "ai/submodels/submodel[2]/random",
@@ -1627,15 +1328,6 @@ var main_init = func {
   setprop("/autopilot/locks/altitude", "");
 
   setprop("/consumables/fuel/tank[8]/jettisoned", FALSE);
-
-  total_fuel = getprop("/consumables/fuel/tank[0]/capacity-gal_us")
-                + getprop("/consumables/fuel/tank[1]/capacity-gal_us")
-                + getprop("/consumables/fuel/tank[2]/capacity-gal_us")
-                + getprop("/consumables/fuel/tank[3]/capacity-gal_us")
-                + getprop("/consumables/fuel/tank[4]/capacity-gal_us")
-                + getprop("/consumables/fuel/tank[5]/capacity-gal_us")
-                + getprop("/consumables/fuel/tank[6]/capacity-gal_us")
-                + getprop("/consumables/fuel/tank[7]/capacity-gal_us");
 
   # Load exterior at startup to avoid stale sim at first external view selection. ( taken from TU-154B )
   print("Loading exterior, wait...");
@@ -1672,9 +1364,7 @@ var main_init = func {
   asymVortex();
 
   # Setup lightning listener
-  if (getprop("/ja37/supported/lightning") == TRUE) {
-    setlistener("/environment/lightning/lightning-pos-y", thunder_listener);
-  }
+  setlistener("/environment/lightning/lightning-pos-y", thunder_listener);
 
   if(getprop("ja37/systems/state") == "parked") {
     setprop("controls/engines/engine/reverser-cmd", rand()>0.5?TRUE:FALSE);
@@ -1693,11 +1383,10 @@ var main_init = func {
   if (getprop("ja37/systems/state") == "cruise") {
       #setprop("position/altitude-ft", 20000);
       #setprop("velocities/mach", 0.65);
-      setprop("fdm/jsbsim/autopilot/throttle-lever-cmd", 0.75);
       setprop("fdm/jsbsim/gear/gear-filtered-norm", 0);
       setprop("fdm/jsbsim/gear/gear-pos-norm", 0);
       setprop("controls/gear/gear-down", 0);
-      auto.mode3();
+      autoflight.System.engageMode(3);
       settimer(cruise, 1.5);
   } else {
     setprop("fdm/jsbsim/gear/gear-filtered-norm", 1);
@@ -1721,7 +1410,6 @@ var setup_custom_stick_bindings = func {
 
 
 var cruise = func {
-  setprop("fdm/jsbsim/autopilot/throttle-lever-cmd", 0.75);
   setprop("controls/gear/gear-down", 0);
   setprop("fdm/jsbsim/gear/gear-filtered-norm", 0);
   setprop("fdm/jsbsim/gear/gear-pos-norm", 0);
@@ -1740,7 +1428,7 @@ var re_init = func {
   # asymmetric vortex detachment
   asymVortex();
   repair(FALSE);
-  auto.stopAP();
+  autoflight.engageMode(0);
   setprop("/controls/gear/gear-down", 1);
   setprop("/controls/gear/brake-parking", 1);
   setprop("ja37/done",0);
@@ -1796,22 +1484,6 @@ var re_init_listener = setlistener("/sim/signals/reinit", func {
   re_init();
  }, 0, 0);
 
-
-############ blinkers ####################
-
-#var blinker = nil;
-#blinker = aircraft.light.new("ja37/blink/five-Hz", [0.2, 0.2]);
-#blinker.switch(1);
-#blinker = aircraft.light.new("ja37/blink/ten-Hz", [0.1, 0.1]);
-#blinker.switch(1);
-#blinker = aircraft.light.new("ja37/blink/third-Hz", [2, 1]);
-#blinker.switch(1);
-
-############# workaround for removing default HUD   ##############
-
-#setlistener("/sim/current-view/view-number", func(n) {
-#        setprop("/sim/hud/visibility[1]", !n.getValue());
-#}, 1, 0);
 
 ###################### autostart ########################
 
@@ -2040,14 +1712,23 @@ var toggleRollDamper = func {
   }
 }
 
-var toggleNosewheelSteer = func {
-  ja37.click();
-  var enabled = getprop("fdm/jsbsim/gear/unit[0]/nose-wheel-steering/enable");
-  setprop("fdm/jsbsim/gear/unit[0]/nose-wheel-steering/enable", !enabled);
-  if(enabled == FALSE) {
-    notice("Nose Wheel Steering: ON", 1.5);
+# Simplified, single button controls for speedbrakes
+var speedbrakes_simple_command = -1; # last command. -1: retract, 1: extend
+var speedbrakes_release_timer = maketimer(2, func {setprop("/controls/flight/speedbrake-switch", 0);});
+speedbrakes_release_timer.singleShot = 1;
+speedbrakes_release_timer.simulatedTime = 1;
+
+var toggleSpeedbrakesSimplified = func (pos) {
+  if (getprop("fdm/jsbsim/gear/gear-pos-norm") > 0) {
+    # landing gear out, hold the switch to keep speedbrakes extended
+    setprop("/controls/flight/speedbrake-switch", pos);
+    speedbrakes_simple_command = -1;
   } else {
-    notice("Nose Wheel Steering: OFF", 1.5);
+    # landing gear in, press to toggle speedbrakes
+    if (!pos) return;
+    speedbrakes_simple_command = -speedbrakes_simple_command;
+    setprop("/controls/flight/speedbrake-switch", speedbrakes_simple_command);
+    speedbrakes_release_timer.restart(2);
   }
 }
 
@@ -2090,23 +1771,7 @@ var cycleSmoke = func() {
 }
 
 var popupTip = func(label, y = 25, delay = nil) {
-    #var node = props.Node.new({ "label": label, "x": getprop('/sim/startup/xsize')/2, "y": -y+getprop('/sim/startup/ysize'), "tooltip-id": "msg", "reason": "click"});
-    #fgcommand("set-tooltip", node);
-    #fgcommand("tooltip-timeout", props.Node.new({}));
-    #var tooltip = canvas.Tooltip.new([300, 100]);
-    #tooltip.createCanvas();
-    if(getprop("ja37/supported/popuptips") == 2) {
-      gui.popupTip(label, delay, nil, {"y": y});
-    } elsif(getprop("ja37/supported/popuptips") == 0) {
-      gui.popupTip(label, delay);
-    } else {
-      call(func _popupTip(label, y, delay), nil, var err = []);
-      if(size(err) != 0) {
-        # if the tooltip system has changed and my use produce error, revert to basic popup tip.
-        print(err[0]);
-        gui.popupTip(label, delay);
-      }
-    }
+    gui.popupTip(label, delay, nil, {"y": y});
 }
 
 var notice = func (str) {
@@ -2127,6 +1792,20 @@ var _popupTip = func(label, y, delay) {
     #canvas.tooltip.showMessage(delay);
 }
 
+var on_damage_enabled = func() {
+    var internal = view.current.getNode("internal");
+    if (internal == nil or !internal.getBoolValue()) {
+        #view.setView(0); added only in FG 2019
+        setprop("/sim/current-view/view-number", 0);
+        setprop("/sim/current-view/view-number-raw", view.views[0].getIndex());
+        screen.log.write("External views are disabled with damage on");
+    }
+}
+
+var damage_listener = setlistener("/payload/armament/msg", func (node) {
+    if (node.getBoolValue()) on_damage_enabled();
+}, 1, 0);
+
 var reload_allowed = func(msg = nil) {
     var b = input.reload_allowed.getBoolValue();
     if(!b and msg != nil) screen.log.write(msg);
@@ -2138,13 +1817,8 @@ var repair_msg = "If you need to repair now, then use Menu-Location-SelectAirpor
 var repair = func {
     if(!reload_allowed(repair_msg)) return;
 
-    var ver = getprop("ja37/supported/crash-system");
-    if (ver == 0) {
-      crash0.repair();
-    } else {
-      crash1.repair();
-      failureSys.armAllTriggers();
-    }
+    crash.repair();
+    failureSys.armAllTriggers();
     setprop("environment/damage", FALSE);
     setprop("ja37/done",0);
     setprop("sim/view[0]/enabled",1);
@@ -2311,6 +1985,32 @@ var stringToLat = func (str) {
   }
 }
 #myPosToString();
+
+view.stepView = func(step, force = 0) {
+    step = step > 0 ? 1 : -1;
+    var n = view.index;
+    for (var i = 0; i < size(view.views); i += 1) {
+        n += step;
+        if (n < 0)
+            n = size(view.views) - 1;
+        elsif (n >= size(view.views))
+            n = 0;
+        var e = view.views[n].getNode("enabled");
+        var internal = view.views[n].getNode("internal");
+
+        if ((force or e == nil or e.getBoolValue())
+            and view.views[n].getNode("name") != nil
+            and ((internal != nil and internal.getBoolValue()) or !getprop("/payload/armament/msg")))
+            break;
+    }
+    #view.setView(n); added only in FG 2019
+    setprop("/sim/current-view/view-number", n);
+    setprop("/sim/current-view/view-number-raw", view.views[n].getIndex());
+
+    # And pop up a nice reminder
+    var popup=getprop("/sim/view-name-popup");
+    if(popup == 1 or popup==nil) gui.popupTip(view.views[n].getNode("name").getValue());
+}
 
 var action_view_handler = {
   init : func {

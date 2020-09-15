@@ -1741,7 +1741,6 @@
     <object-name>hudRestPlaque</object-name>
     <object-name>plaqueLeft</object-name>
     <object-name>plaqueRight</object-name>
-    <object-name>radarHeading</object-name>
     <!--<object-name>radarScreen</object-name>-->
     <object-name>seat</object-name>
   </effect>
@@ -1751,6 +1750,22 @@
     <object-name>glassRadar</object-name>
     <object-name>hudBottomPlateGlass</object-name>
   </effect>
+
+  <effect>
+    <inherits-from>Aircraft/JA37/Models/Effects/ja37-gauge</inherits-from>
+    <object-name>radarHeading</object-name>
+  </effect>
+
+  <animation>
+    <type>material</type>
+    <object-name>radarHeading</object-name>
+    <emission>
+      <red-prop>instrumentation/instrumentation-light/r</red-prop>
+      <green-prop>instrumentation/instrumentation-light/g</green-prop>
+      <blue-prop>instrumentation/instrumentation-light/b</blue-prop>
+      <factor-prop>controls/lighting/instruments-norm</factor-prop>
+    </emission>
+  </animation>
 
   <!--<effect>
     <inherits-from>Aircraft/JA37/Models/Effects/glass/glass</inherits-from>
@@ -1971,22 +1986,9 @@
  <animation>
   <type>rotate</type>
   <object-name>radarHeading</object-name>
-  <condition>   
-    <property>ja37/elec/dc-bus-main-bool</property>
-  </condition>
-  <property>ja37/avionics/heading-magnetic-limited-deg</property>
+  <property>/instrumentation/heading-indicator/indicator-pos-deg</property>
   <factor>-1.0</factor>
-  <!--<center>
-   <x-m>-3.98169</x-m>
-   <y-m>0.00000</y-m>
-   <z-m>0.34642</z-m>
-  </center>
   <axis>
-   <x>-1.0</x>
-   <y>0.0</y>
-   <z>-0.342020143325669</z>
-  </axis>-->
-  <axis>   
    <x1-m> -3.9817 </x1-m>
    <y1-m>  0 </y1-m>
    <z1-m>  0.3464 </z1-m>
@@ -1994,7 +1996,7 @@
    <y2-m>  0 </y2-m>
    <z2-m>  0.3445 </z2-m>
   </axis>
- </animation> 
+ </animation>
 
  <!--<animation>
   <type>material</type> 
@@ -2021,193 +2023,91 @@
   </emission>
  </animation>
 
-<!--   Threat warning Radar indicators -->
+<!-- RWR indicators -->
 
 <animation>
-  <type>material</type> 
+  <type>material</type>
   <object-name>TWR1</object-name>
   <condition>
-    <equals>
-      <property>ja37/blink/four-Hz/state</property>
-      <value>1</value>
-    </equals>
-    <or>
-      <equals>
-        <property>instrumentation/radar/twr1</property>
-        <value>1</value>
-      </equals>
-      <property>/controls/lighting/test-indicator-panels</property>
-    </or>
+    <property>instrumentation/rwr/ajs-lights/sector[0]</property>
   </condition>
   <emission>
-   <red>1.0</red> 
-   <green>0.0</green> 
-   <blue>0.0</blue>
-   <factor-prop>systems/electrical/dc-light</factor-prop>
+    <red>1.0</red>
+    <green>0.0</green>
+    <blue>0.0</blue>
+    <factor-prop>systems/electrical/dc-light</factor-prop>
   </emission>
- </animation>
+</animation>
 
 <animation>
-  <type>material</type> 
+  <type>material</type>
   <object-name>TWR3</object-name>
   <condition>
-    <equals>
-      <property>ja37/blink/four-Hz/state</property>
-      <value>1</value>
-    </equals>
-    <or>
-    <equals>
-      <property>instrumentation/radar/twr3</property>
-      <value>1</value>
-   </equals>
-   <property>/controls/lighting/test-indicator-panels</property>
-    </or>
+    <property>instrumentation/rwr/ajs-lights/sector[1]</property>
   </condition>
   <emission>
-   <red>1.0</red> 
-   <green>0.0</green> 
-   <blue>0.0</blue>
-   <factor-prop>systems/electrical/dc-light</factor-prop>
+    <red>1.0</red>
+    <green>0.0</green>
+    <blue>0.0</blue>
+    <factor-prop>systems/electrical/dc-light</factor-prop>
   </emission>
- </animation>
+</animation>
 
- <animation>
-  <type>material</type> 
+<animation>
+  <type>material</type>
   <object-name>TWR5</object-name>
   <condition>
-    <equals>
-      <property>ja37/blink/four-Hz/state</property>
-      <value>1</value>
-    </equals>
-    <or>
-    <equals>
-      <property>instrumentation/radar/twr5</property>
-      <value>1</value>
-   </equals>
-   <property>/controls/lighting/test-indicator-panels</property>
-    </or>
+    <property>instrumentation/rwr/ajs-lights/sector[2]</property>
   </condition>
   <emission>
-   <red>1.0</red> 
-   <green>0.0</green> 
-   <blue>0.0</blue>
-   <factor-prop>systems/electrical/dc-light</factor-prop>
+    <red>1.0</red>
+    <green>0.0</green>
+    <blue>0.0</blue>
+    <factor-prop>systems/electrical/dc-light</factor-prop>
   </emission>
- </animation>
+</animation>
 
- <animation>
-  <type>material</type> 
+<animation>
+  <type>material</type>
   <object-name>TWR7</object-name>
   <condition>
-    <equals>
-      <property>ja37/blink/four-Hz/state</property>
-      <value>1</value>
-    </equals>
-    <or>
-    <equals>
-      <property>instrumentation/radar/twr7</property>
-      <value>1</value>
-   </equals>
-   <property>/controls/lighting/test-indicator-panels</property>
-    </or>
+    <property>instrumentation/rwr/ajs-lights/sector[3]</property>
   </condition>
   <emission>
-   <red>1.0</red> 
-   <green>0.0</green> 
-   <blue>0.0</blue>
-   <factor-prop>systems/electrical/dc-light</factor-prop>
+    <red>1.0</red>
+    <green>0.0</green>
+    <blue>0.0</blue>
+    <factor-prop>systems/electrical/dc-light</factor-prop>
   </emission>
- </animation>
+</animation>
 
- <animation>
-  <type>material</type> 
+<animation>
+  <type>material</type>
   <object-name>TWR9</object-name>
   <condition>
-    <equals>
-      <property>ja37/blink/four-Hz/state</property>
-      <value>1</value>
-    </equals>
-    <or>
-    <equals>
-      <property>instrumentation/radar/twr9</property>
-      <value>1</value>
-   </equals>
-   <property>/controls/lighting/test-indicator-panels</property>
-    </or>
+    <property>instrumentation/rwr/ajs-lights/sector[4]</property>
   </condition>
   <emission>
-   <red>1.0</red> 
-   <green>0.0</green> 
-   <blue>0.0</blue>
-   <factor-prop>systems/electrical/dc-light</factor-prop>
+    <red>1.0</red>
+    <green>0.0</green>
+    <blue>0.0</blue>
+    <factor-prop>systems/electrical/dc-light</factor-prop>
   </emission>
- </animation>
+</animation>
 
- <animation>
-  <type>material</type> 
+<animation>
+  <type>material</type>
   <object-name>TWR11</object-name>
   <condition>
-    <equals>
-      <property>ja37/blink/four-Hz/state</property>
-      <value>1</value>
-    </equals>
-    <or>
-    <equals>
-      <property>instrumentation/radar/twr11</property>
-      <value>1</value>
-   </equals>
-   <property>/controls/lighting/test-indicator-panels</property>
-    </or>
+    <property>instrumentation/rwr/ajs-lights/sector[5]</property>
   </condition>
   <emission>
-   <red>1.0</red> 
-   <green>0.0</green> 
-   <blue>0.0</blue>
-   <factor-prop>systems/electrical/dc-light</factor-prop>
+    <red>1.0</red>
+    <green>0.0</green>
+    <blue>0.0</blue>
+    <factor-prop>systems/electrical/dc-light</factor-prop>
   </emission>
- </animation>
-
- <!--<animation>
-  <type>select</type>
-  <condition>
-    <property>ja37/supported/canvas</property>
-  </condition>
-  <object-name>hud</object-name>
-  <object-name>hudStruts</object-name>
-</animation>-->
-
- <animation>
-  <type>scale</type>
-  <object-name>hud</object-name>
-  <object-name>aj37hudStruts</object-name>
-  <property>ja37/supported/canvas</property>
-  <interpolation>
-   <entry>
-    <ind> 0.00 </ind>
-    <dep> 0.00 </dep>
-   </entry>
-   <entry>
-    <ind> 0.01 </ind>
-    <dep> 1.00 </dep>
-   </entry>
-  </interpolation>
-  <center>
-   <x-m>  0 </x-m>
-   <y-m>  0 </y-m>
-   <z-m>  0 </z-m>
-  </center>
-  <x-min>0.0</x-min>
-  <y-min>0.0</y-min>
-  <z-min>0.0</z-min>
-  <x-max>1.0</x-max>
-  <y-max>1.0</y-max>
-  <z-max>1.0</z-max>  
-  <axis>
-   <x>1.0</x>
-   <y>1.0</y>
-   <z>1.0</z>
-  </axis>
- </animation>
+</animation>
 
  <animation>
   <type>material</type> 

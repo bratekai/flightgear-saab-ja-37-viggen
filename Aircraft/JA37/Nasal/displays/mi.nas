@@ -123,16 +123,16 @@ var MI = {
 	  	var mi = { parents: [MI] };
 	  	mi.input = {
 			alt_ft:               "instrumentation/altimeter/indicated-altitude-ft",
-			APLockAlt:            "autopilot/locks/altitude",
-			APTgtAgl:             "autopilot/settings/target-agl-ft",
-			APTgtAlt:             "autopilot/settings/target-altitude-ft",
+			APmode:               "fdm/jsbsim/autoflight/mode",
+			APTgtAlt:             "fdm/jsbsim/autoflight/pitch/alt/target",
 			brightnessSetting:    "ja37/avionics/brightness-mi-knob",
 			cursor_slew_x:        "controls/displays/cursor-total-slew-x",
 			cursor_slew_y:        "controls/displays/cursor-total-slew-y",
 			cursor_click:         "controls/displays/cursor-total-click",
 			heading:              "instrumentation/heading-indicator/indicated-heading-deg",
 			hydrPressure:         "fdm/jsbsim/systems/hydraulics/system1/pressure",
-			rad_alt:              "position/altitude-agl-ft",
+			rad_alt:              "instrumentation/radar-altimeter/radar-altitude-ft",
+			rad_alt_ready:        "instrumentation/radar-altimeter/ready",
 			radarEnabled:         "ja37/hud/tracks-enabled",
 			radarRange:           "instrumentation/radar/range",
 			radarServ:            "instrumentation/radar/serviceable",
@@ -159,7 +159,6 @@ var MI = {
 			qfeActive:        	  "ja37/displays/qfe-active",
 	        qfeShown:		  	  "ja37/displays/qfe-shown",
 	        currentMode:          "ja37/hud/current-mode",
-	        ctrlRadar:        "controls/altimeter-radar",
 	        alphaJSB:         "fdm/jsbsim/aero/alpha-deg",
 	        mach:             "instrumentation/airspeed-indicator/indicated-mach",
       	};
@@ -1312,15 +1311,15 @@ var MI = {
 	      if(canvas_HUD.mode == canvas_HUD.TAKEOFF) {
 	      	me.desired_alt_ft = (500*M2FT);
 	        me.desired_alt_delta_ft = (500*M2FT)-me.input.alt_ft.getValue();
-	      } elsif (me.input.APLockAlt.getValue() == "altitude-hold" and me.input.APTgtAlt.getValue() != nil) {
+	      } elsif (me.input.APmode.getValue() == 3 and me.input.APTgtAlt.getValue() != nil) {
 	      	me.desired_alt_ft = me.input.APTgtAlt.getValue();
 	        me.desired_alt_delta_ft = me.input.APTgtAlt.getValue()-me.input.alt_ft.getValue();
 	      } elsif(canvas_HUD.mode == canvas_HUD.LANDING and land.mode < 3 and land.mode > 0) {
 	      	me.desired_alt_ft = (500*M2FT);
 	        me.desired_alt_delta_ft = (500*M2FT)-me.input.alt_ft.getValue();
-	      } elsif (me.input.APLockAlt.getValue() == "agl-hold" and me.input.APTgtAgl.getValue() != nil) {
-	      	me.desired_alt_ft = me.input.APTgtAgl.getValue();
-	        me.desired_alt_delta_ft = me.input.APTgtAgl.getValue()-me.input.rad_alt.getValue();
+	      #} elsif (me.input.APLockAlt.getValue() == "agl-hold" and me.input.APTgtAgl.getValue() != nil) {
+	      #	me.desired_alt_ft = me.input.APTgtAgl.getValue();
+	      #  me.desired_alt_delta_ft = me.input.APTgtAgl.getValue()-me.input.rad_alt.getValue();
 	      } elsif(me.input.rmActive.getValue() == 1 and me.input.RMCurrWaypoint.getValue() != nil and me.input.RMCurrWaypoint.getValue() >= 0) {
 	        me.i = me.input.RMCurrWaypoint.getValue();
 	        me.rt_alt = getprop("autopilot/route-manager/route/wp["~me.i~"]/altitude-ft");
@@ -1338,7 +1337,7 @@ var MI = {
 
 	        me.desired_lines3.setScale(1, me.scale);
 
-	        if (me.showLines == TRUE and (getprop("fdm/jsbsim/systems/indicators/auto-altitude-secondary") == FALSE or me.input.twoHz.getValue())) {
+	        if (me.showLines == TRUE and (!getprop("fdm/jsbsim/systems/indicators/flashing-alt-bars") or me.input.twoHz.getValue())) {
 	          me.desired_lines3.show();
 	        } else {
 	          me.desired_lines3.hide();
@@ -1350,7 +1349,7 @@ var MI = {
 	},
 
 	radarIndex: func {
-		me.radAlt = me.input.ctrlRadar.getValue() == TRUE?me.input.rad_alt.getValue() * FT2M : nil;
+		me.radAlt = me.input.rad_alt_ready.getBoolValue()?me.input.rad_alt.getValue() * FT2M : nil;
 		if (me.radAlt != nil and me.radAlt < 600) {
 			me.radar_index.setTranslation(0, extrapolate(me.radAlt, 0, 600, 0, halfHeightOfSideScales));
 			me.radar_index.show();
@@ -1367,13 +1366,11 @@ var extrapolate = func (x, x1, x2, y1, y2) {
 var mi = nil;
 var init = func {
 	removelistener(idl); # only call once
-	if (getprop("ja37/supported/canvas") == TRUE) {
-		setupCanvas();
-		mi = MI.new();
-		settimer(func {
-			mi.loop();
-		},0.5);# this will prevent it from starting before TI has been initialized.
-	}
+	setupCanvas();
+	mi = MI.new();
+	settimer(func {
+		mi.loop();
+	},0.5);# this will prevent it from starting before TI has been initialized.
 }
 
 #idl = setlistener("ja37/supported/initialized", init, 0, 0);

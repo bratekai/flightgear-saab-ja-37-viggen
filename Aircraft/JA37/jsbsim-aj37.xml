@@ -13,7 +13,7 @@
   <fileheader>
     <author> Nikolai V. Chr. </author>
     <filecreationdate> 2016-06-10 </filecreationdate>
-    <version> 4.317 </version>
+    <version> 4.318 </version>
     <license>
       <licenseName>GPL 2 (General Public License version 2)</licenseName>
       <licenseURL>http://www.gnu.org/licenses/old-licenses/gpl-2.0.html</licenseURL>
@@ -279,11 +279,15 @@
   </mass_balance>
   
   <propulsion file="Systems/jsb-propulsion-aj37"/>
+  <system file="jsb-input"/> <!-- BEFORE autoflight -->
+  <system file="autoflight"/> <!-- BEFORE control drivers -->
+  <system file="jsb-control-drivers"/> <!-- BEFORE flight controls -->
   <flight_control file="Systems/jsb-controls"/>
   <aerodynamics file="ja37-aerodynamics.xml"/>
   <system file="jsb-hydraulic"/>
   <system file="jsb-flight"/>
   <system file="jsb-electric"/>
+  <system file="jsb-instruments"/>
   <system file="jsb-indicators"/>
   <system file="jsb-cannon_recoil"/>
   <system file="jsb-fuel"/>

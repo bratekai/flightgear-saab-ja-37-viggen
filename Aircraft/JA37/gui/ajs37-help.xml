@@ -10,12 +10,16 @@
 *************************************************************************-->
     <title>Saab AJS-37 Viggen</title>
     <key>
-        <name>s</name>
-        <desc>Startup / shutdown (if walker is enabled use menu instead)</desc>
-    </key>
-    <key>
         <name>Backspace</name>
         <desc>Toggle thrust reverser</desc>
+    </key>
+    <key>
+        <name>k/j</name>
+        <desc>Extend/retract airbrakes (with gear down: keep 'k' pressed to extend)</desc>
+    </key>
+    <key>
+        <name>Ctrl-B</name>
+        <desc>Toggle airbrakes (with gear down: keep pressed to extend)</desc>
     </key>
 	<key>
         <name>u</name>
@@ -74,10 +78,6 @@
         <desc>Cycle weapons</desc>
     </key>
     <key>
-        <name>P</name>
-        <desc>Toggle custom/FG HUD</desc>
-    </key>
-    <key>
         <name>M</name>
         <desc>Toggle nose wheel steering</desc>
     </key>
@@ -97,10 +97,6 @@
         <name>f</name>
         <desc>Toggle radar steer order on current selection</desc>
     </key>
-    <!--<key>
-        <name>F</name>
-        <desc>Set autopilot to stop follow</desc>
-    </key>-->
     <key>
         <name>S</name>
         <desc>Cycle smoke. Off, Yellow or Blue</desc>
@@ -116,6 +112,14 @@
     <key>
         <name>N</name>
         <desc>Select radar track center most in HUD</desc>
+    </key>
+    <key>
+        <name>F</name>
+        <desc>Unlock selected radar track</desc>
+    </key>
+    <key>
+        <name>E</name>
+        <desc>Uncage IR seeker after lock (held: cage/reset seeker)</desc>
     </key>
     <key>
         <name>Ctrl n</name>
@@ -138,8 +142,28 @@
         <desc>Yaw trim or A/P heading/roll adjust</desc>
     </key>
     <key>
-        <name>Ctrl Up/Down</name>
-        <desc>A/T speed adjust</desc>
+        <name>Ctrl-T</name>
+        <desc>Select CSS (stability assist) autopilot mode</desc>
+    </key>
+    <key>
+        <name>Ctrl-W</name>
+        <desc>Select attitude hold</desc>
+    </key>
+    <key>
+        <name>Ctrl-A</name>
+        <desc>Select altitude hold</desc>
+    </key>
+    <key>
+        <name>Ctrl-D</name>
+        <desc>Autopilot quick disengage</desc>
+    </key>
+    <key>
+        <name>Ctrl-S</name>
+        <desc>Toggle autothrottle lever</desc>
+    </key>
+    <key>
+        <name>Ctrl-G</name>
+        <desc>Autothrottle quick disengage</desc>
     </key>
     <key>
         <name>Shift PageUp</name>
@@ -150,19 +174,19 @@
         <desc>Adjust seat down</desc>
     </key>
     <key>
-        <name>F6</name>
+        <name>Ctrl-E x3</name>
         <desc>Eject</desc>
     </key>
     <key>
-        <name>Ctrl-1</name>
+        <name>F5</name>
         <desc>GCI Picture</desc>
     </key>
     <key>
-        <name>Ctrl-2</name>
+        <name>F6</name>
         <desc>GCI Dope</desc>
     </key>
     <key>
-        <name>Ctrl-3</name>
+        <name>F7</name>
         <desc>GCI Cutoff</desc>
     </key>
     <!--

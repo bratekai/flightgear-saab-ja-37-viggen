@@ -14,9 +14,9 @@ input = {
     nav0GSInRange:    	  "instrumentation/nav[0]/gs-in-range",
     nav0HasGS:        	  "instrumentation/nav[0]/has-gs",
     nav0InRange:       	  "instrumentation/nav[0]/in-range",
-    ctrlRadar:            "controls/altimeter-radar",
-    rad_alt:              "position/altitude-agl-ft",
-    alt_ft:               "instrumentation/altimeter/indicated-altitude-ft",
+    rad_alt:            "instrumentation/radar-altimeter/radar-altitude-ft",
+    rad_alt_ready:      "instrumentation/radar-altimeter/ready",
+    alt_ft:             "instrumentation/altimeter/indicated-altitude-ft",
 };
 
 # setup property nodes for the loop
@@ -79,7 +79,6 @@ var printDA = func (str) {
 }
 
 var B = func {
-    auto.unfollowSilent();
     setprop("ja37/hud/landing-mode", FALSE);
     if (route.Polygon.flyMiss.isPrimary() == FALSE) {
         route.Polygon.flyMiss.setAsPrimary();
@@ -134,7 +133,6 @@ var B = func {
 };
 
 var LA = func {
-    auto.unfollowSilent();
     setprop("ja37/hud/landing-mode", FALSE);
     if (route.Polygon.flyRTB.isPrimary() == FALSE) {
         route.Polygon.flyRTB.setAsPrimary();
@@ -190,7 +188,6 @@ var LA = func {
 };
 
 var L = func {
-    auto.unfollowSilent();
     setprop("ja37/hud/landing-mode", FALSE);
     setprop("ja37/avionics/approach", FALSE);#long
 
@@ -223,7 +220,6 @@ var L = func {
 };
 
 var LB = func {
-    auto.unfollowSilent();
     setprop("ja37/hud/landing-mode", TRUE);
     setprop("ja37/avionics/approach", FALSE);#long
     mode_B_active = FALSE;
@@ -245,7 +241,6 @@ var LB = func {
 };
 
 var LF = func {
-    auto.unfollowSilent();
     setprop("ja37/hud/landing-mode", TRUE);
     setprop("ja37/avionics/approach", TRUE);#short
     mode_B_active = FALSE;
@@ -269,7 +264,6 @@ var LF = func {
 var OPT = func {
     if (getprop("gear/gear/position-norm") > 0 or getprop("ja37/hud/landing-mode") == TRUE) {
         printDA("OPT: activated");
-        auto.unfollowSilent();
         mode = 4;
         mode_LA_active = FALSE;
         mode_B_active = FALSE;
@@ -377,12 +371,11 @@ var Landing = {
                 setprop("ja37/avionics/heading-indicator-target", getprop("orientation/heading-magnetic-deg"));
             }
         }
-        me.alt             = getprop("instrumentation/altimeter/indicated-altitude-ft")*FT2M;
-        me.alt_rad         = getprop("position/altitude-agl-ft")!=nil?getprop("position/altitude-agl-ft")*FT2M:100000;
-        me.alt_rad_enabled = getprop("controls/altimeter-radar");
+        me.alt             = input.alt_ft.getValue()*FT2M;
+        me.alt_rad_enabled = input.rad_alt_ready.getBoolValue();
+        me.alt_rad         = me.alt_rad_enabled ? input.rad_alt.getValue()*FT2M:100000;
         if (getprop("ja37/hud/landing-mode")==TRUE and mode_OPT_active==FALSE and ((me.alt < 35) or (me.alt_rad_enabled and me.alt>60 and me.alt_rad<15))) {
             printDA("OPT: auto activated");
-            auto.unfollowSilent();
             mode = 4;
             mode_LA_active = FALSE;
             mode_B_active = FALSE;
@@ -423,7 +416,7 @@ var Landing = {
         		me.runwayCoord.apply_course_distance(geo.normdeg(me.rectAngle), 4100);
         		me.distCenter = geo.aircraft_position().distance_to(me.runwayCoord);
         		approach_circle = me.runwayCoord;
-                if (getprop("/autopilot/target-tracking-ja37/enable") == FALSE and getprop("ja37/hud/landing-mode")==FALSE and mode_OPT_active==FALSE and mode_B_active == FALSE and mode_L_active == FALSE and mode_LB_active == FALSE and mode_LF_active == FALSE and mode_LA_active == FALSE) {
+                if (getprop("ja37/hud/landing-mode")==FALSE and mode_OPT_active==FALSE and mode_B_active == FALSE and mode_L_active == FALSE and mode_LB_active == FALSE and mode_LF_active == FALSE and mode_LA_active == FALSE) {
                     # seems route manager was activated through FG menu.
                     if (route.Polygon.primary == route.Polygon.flyMiss) {
                         mode_B_active = TRUE;
@@ -433,7 +426,7 @@ var Landing = {
                     mode = 0;
                     printDA("menu activation");
                 }
-                if (mode_OPT_active==TRUE and getprop("ja37/hud/landing-mode")==TRUE) {# or ((input.ctrlRadar.getValue() == 1? (input.rad_alt.getValue() * FT2M) < 15 : (input.alt_ft.getValue() * FT2M) < 35) and mode_B_active == FALSE and mode_L_active == FALSE and mode_LA_active == FALSE)) {
+                if (mode_OPT_active==TRUE and getprop("ja37/hud/landing-mode")==TRUE) {
                     # mode OPT
                     mode = 4;
                     mode_B_active = FALSE;

@@ -826,14 +826,6 @@
             <gain>1</gain>
         </pure_gain>
 
-        <pure_gain name="/systems/electrical/outputs/tacan">
-            <description>
-                      Tacan power
-            </description>
-            <input>/ja37/elec/ac-bus-main-volt</input>
-            <gain>1</gain>
-        </pure_gain>
-
         <pure_gain name="/systems/electrical/outputs/adf">
             <description>
                       ADF power
@@ -1080,6 +1072,38 @@
                     <property>position/h-agl-ft</property>
                     <value>-0.3048</value>
                 </product>
+            </function>
+        </fcs_function>
+        
+        <switch name="systems/electrical/lost-ac-time">
+            <default value="sim-time-sec"/>
+            <test logic="AND" value="systems/electrical/lost-ac-time">
+                /ja37/elec/ac-bus-main-bool == 0
+            </test>
+        </switch>
+        
+        <switch name="systems/electrical/lost-dc-time">
+            <default value="sim-time-sec"/>
+            <test logic="AND" value="systems/electrical/lost-dc-time">
+                /ja37/elec/dc-bus-main-bool == 0
+            </test>
+        </switch>
+        
+        <fcs_function name="/ja37/avionics/lost-ac-sec">
+            <function>
+                <difference>
+                    <property>sim-time-sec</property>
+                    <property>systems/electrical/lost-ac-time</property>                    
+                </difference>
+            </function>
+        </fcs_function>
+        
+        <fcs_function name="/ja37/avionics/lost-dc-sec">
+            <function>
+                <difference>
+                    <property>sim-time-sec</property>
+                    <property>systems/electrical/lost-dc-time</property>                    
+                </difference>
             </function>
         </fcs_function>
 

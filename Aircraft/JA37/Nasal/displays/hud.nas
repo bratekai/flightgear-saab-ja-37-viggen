@@ -79,10 +79,6 @@ var reticle_factor = 1.15;# size of flight path indicator, aiming reticle, and o
 var sidewind_factor = 1.0;# size of sidewind indicator
 var airspeedPlace = 5*pixelPerDegreeY;
 var airspeedPlaceFinal = -5*pixelPerDegreeY;
-var sideslipPlaceX = (325/1024)*canvasWidth;
-var sideslipPlaceY = (425/1024)*canvasWidth;
-var sideslipPlaceXFinal = 0;
-var sideslipPlaceYFinal = 0;
 var missile_aim_position = centerOffset+0.03*pixelPerMeter;
 var QFE_position = centerOffset+(5.5*pixelPerDegreeY);
 var dig_alt_position = centerOffset+(9.0*pixelPerDegreeY);
@@ -558,33 +554,6 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
       
       .setColor(r,g,b, a);
 
-    #turn coordinator
-    me.turn_group = me.root.createChild("group").setTranslation(sideslipPlaceX, sideslipPlaceY);
-    me.turn_group2 = me.turn_group.createChild("group");
-    me.t_rot   = me.turn_group2.createTransform();
-    me.turn_indicator = me.turn_group2.createChild("path")
-         .moveTo(-(20/1024)*canvasWidth, 0)
-         .horiz(-(150/1024)*canvasWidth)
-         .moveTo((20/1024)*canvasWidth, 0)
-         .horiz((150/1024)*canvasWidth)
-         .moveTo(-(20/1024)*canvasWidth, 0)
-         .vert((20/1024)*canvasWidth)
-         .moveTo((20/1024)*canvasWidth, 0)
-         .vert((20/1024)*canvasWidth)     
-         .setStrokeLineWidth(w)
-         .setColor(r,g,b, a);
-    me.turn_group3 = me.turn_group2.createChild("group");
-    me.slip_indicator = me.turn_group3.createChild("path")
-         .moveTo(-(8/1024)*canvasWidth, -(26/1024)*canvasWidth)
-         .horiz((16/1024)*canvasWidth)
-         .vert((16/1024)*canvasWidth)
-         .horiz(-(16/1024)*canvasWidth)
-         .vert(-(16/1024)*canvasWidth)
-         .setColorFill(r,g,b, a)
-         .setStrokeLineWidth(w)
-         .setColor(r,g,b, a);
-
-
     # Horizon
     #clip = (0/1024)*canvasWidth~"px, "~(712/1024)*canvasWidth~"px, "~(1024/1024)*canvasWidth~"px, "~(0/1024)*canvasWidth~"px";
     #me.horizon_group.set("clip", "rect("~clip~")");#top,right,bottom,left (absolute in canvas)
@@ -997,8 +966,8 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
     
 
     artifacts0 = [me.head_scale, me.hdgLineL, me.heading_bug, me.vel_vec, me.reticle_missile, me.reticle_c_missile,
-             me.hdgLineR, me.head_scale_indicator, me.turn_indicator, me.arrow, me.head_scale_horz_ticks,
-             me.alt_scale_high, me.alt_scale_med, me.alt_scale_low, me.slip_indicator,
+             me.hdgLineR, me.head_scale_indicator, me.arrow, me.head_scale_horz_ticks,
+             me.alt_scale_high, me.alt_scale_med, me.alt_scale_low,
              me.alt_scale_line, me.aim_reticle_fin, me.reticle_cannon, me.desired_lines2,
              me.alt_pointer, me.rad_alt_pointer, me.desired_lines3, me.horizon_line_gap, me.lock_rdr, me.lock_ir,# me.target_air, me.target_sea, me.target_ground, me.diamond
              me.desired_boxes, me.reticle_no_ammo, me.takeoff_symbol, me.horizon_line, me.horizon_line_nav, me.horizon_dots, me.diamond_small,
@@ -1057,18 +1026,17 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
         alt_ft:           "instrumentation/altimeter/indicated-altitude-ft",
         alt_ft_real:      "position/altitude-ft",
         altCalibrated:    "ja37/avionics/altimeters-calibrated",
-        APHeadingBug:     "autopilot/settings/heading-bug-deg",
-        APLockAlt:        "autopilot/locks/altitude",
-        APLockHeading:    "autopilot/locks/heading",
-        APnav0HeadingErr: "autopilot/internal/nav1-heading-error-deg",
-        APTgtAgl:         "autopilot/settings/target-agl-ft",
-        APTgtAlt:         "autopilot/settings/target-altitude-ft",
-        APTrueHeadingErr: "autopilot/internal/true-heading-error-deg",
+        #APHeadingBug:     "autopilot/settings/heading-bug-deg",
+        APmode:           "fdm/jsbsim/autoflight/mode",
+        #APLockHeading:    "autopilot/locks/heading",
+        #APnav0HeadingErr: "autopilot/internal/nav1-heading-error-deg",
+        #APTgtAgl:         "autopilot/settings/target-agl-ft",
+        APTgtAlt:         "fdm/jsbsim/autoflight/pitch/alt/target",
+        #APTrueHeadingErr: "autopilot/internal/true-heading-error-deg",
         beta:             "orientation/side-slip-deg",
         callsign:         "ja37/hud/callsign",
         cannonAmmo:       "ai/submodels/submodel[3]/count",
         combat:           "ja37/hud/combat",
-        ctrlRadar:        "controls/altimeter-radar",
         currentMode:      "ja37/hud/current-mode",
         dme:              "instrumentation/dme/KDI572-574/nm",
         dmeDist:          "instrumentation/dme/indicated-distance-nm",
@@ -1084,7 +1052,6 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
         ias:              "instrumentation/airspeed-indicator/indicated-speed-kt",#"/velocities/airspeed-kt",
         landingMode:      "ja37/hud/landing-mode",
         mach:             "instrumentation/airspeed-indicator/indicated-mach",
-        mode:             "ja37/hud/mode",
         nav0GSNeedleDefl: "instrumentation/nav[0]/gs-needle-deflection-norm",
         nav0GSNeedleDeflD:"instrumentation/nav[0]/gs-needle-deflection-deg",
         nav0GSInRange:    "instrumentation/nav[0]/gs-in-range",
@@ -1093,7 +1060,8 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
         nav0HeadingDefl:  "instrumentation/nav[0]/heading-needle-deflection",
         nav0InRange:      "instrumentation/nav[0]/in-range",
         pitch:            "orientation/pitch-deg",
-        rad_alt:          "position/altitude-agl-ft",#/instrumentation/radar-altimeter/radar-altitude-ft",
+        rad_alt:          "instrumentation/radar-altimeter/radar-altitude-ft",
+        rad_alt_ready:    "instrumentation/radar-altimeter/ready",
         radar_serv:       "instrumentation/radar/serviceable",
         RMActive:         "autopilot/route-manager/active",
         rmDist:           "autopilot/route-manager/wp/dist",
@@ -1101,9 +1069,7 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
         RMWaypointBearing:"autopilot/route-manager/wp/bearing-deg",
         roll:             "orientation/roll-deg",
         srvHead:          "instrumentation/heading-indicator/serviceable",
-        srvTurn:          "instrumentation/turn-indicator/serviceable",
         service:          "instrumentation/head-up-display/serviceable",
-        sideslipOn:       "ja37/hud/bank-indicator",
         speed_d:          "velocities/speed-down-fps",
         speed_e:          "velocities/speed-east-fps",
         speed_n:          "velocities/speed-north-fps",
@@ -1189,7 +1155,7 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
 
     me.displaySeeker(mode);
 
-    if(me.has_power == FALSE or me.input.mode.getValue() == 0 or testing.ongoing == TRUE) {
+    if(me.has_power == FALSE or testing.ongoing == TRUE) {
       me.root.hide();
       me.root.update();
       air2air = FALSE;
@@ -1271,9 +1237,6 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
 
       ### artificial horizon and pitch lines ###
       me.displayPitchLines(mode);
-
-      ### turn coordinator ###
-      me.displayTurnCoordinator();
 
       ####  Radar HUD tracks  ###
       me.displayRadarTracks(mode);
@@ -1494,7 +1457,7 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
   displayAltitude: func () {
     me.metric = me.input.units.getValue();
     me.alti = me.metric == TRUE ? me.input.alt_ft.getValue() * FT2M : me.input.alt_ft.getValue();
-    me.radAlt = me.input.ctrlRadar.getValue() == 1?(me.metric == TRUE ? me.input.rad_alt.getValue() * FT2M : me.input.rad_alt.getValue()):nil;
+    me.radAlt = me.input.rad_alt_ready.getBoolValue() ?(me.metric == TRUE ? me.input.rad_alt.getValue() * FT2M : me.input.rad_alt.getValue()):nil;
     if (mode == COMBAT) {
       me.displayAltitudeNumber(me.alti);
     } else {
@@ -1641,7 +1604,6 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
         me.alt_pointer.show();
         me.rad_alt_pointer.hide();
       }
-      me.alt_scale_grp.update();
       if(me.verbose > 2) print("alt " ~ sprintf("%3d", alt) ~ " radAlt:" ~ sprintf("%3d", radAlt) ~ " rad_offset:" ~ sprintf("%3d", me.rad_offset));
     } elsif (alt_scale_mode == 1) {
       me.alt_scale_factor = me.metric == TRUE ? 100 : 400;
@@ -1686,7 +1648,6 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
         me.alt_pointer.show();
         me.rad_alt_pointer.hide();
       }
-      me.alt_scale_grp.update();
       #print("alt " ~ sprintf("%3d", alt) ~ " placing med " ~ sprintf("%3d", offset));
     } elsif (alt_scale_mode == 2) {
       me.alt_scale_factor = me.metric == TRUE ? 200 : 1000;
@@ -1749,10 +1710,10 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
       }
       #me.alt_scale_clip_grp.setTranslation(scalePlace, 0);# move alt. scale lateral with FPI.
       #me.alt_scale_clip_grp.set("clip", me.clipAltScale);
-      me.alt_scale_grp.show();
-      me.alt_scale_grp.update();
       #print("alt " ~ sprintf("%3d", alt) ~ " radAlt:" ~ sprintf("%3d", radAlt) ~ " rad_offset:" ~ sprintf("%3d", me.rad_offset));
     }
+    me.alt_scale_grp.update();
+    me.alt_scale_grp.show();
   },
 
   displayDigitalAltitude: func (alt, radAlt) {
@@ -1773,13 +1734,7 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
       me.inter = TRUE;
       me.INT = TRUE;
     }
-    if (radAlt == nil and me.input.ctrlRadar.getValue() == 1) {
-      # Radar alt instrument not initialized yet
-      if (me.INT == FALSE) {
-        me.inter = FALSE;
-        me.alt.setText("");
-      }
-    } elsif (radAlt != nil and radAlt < me.radar_clamp) {
+    if (radAlt != nil and radAlt < me.radar_clamp) {
       if (me.INT == FALSE) {
         me.inter = FALSE;
         # in radar alt range
@@ -1814,7 +1769,7 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
       me.showLines = TRUE;
       if(mode == TAKEOFF) {
         me.desired_alt_delta_ft = (500*M2FT)-me.input.alt_ft.getValue();
-      } elsif (me.input.APLockAlt.getValue() == "altitude-hold" and me.input.APTgtAlt.getValue() != nil) {
+      } elsif (me.input.APmode.getValue() == 3 and me.input.APTgtAlt.getValue() != nil) {
         me.desired_alt_delta_ft = me.input.APTgtAlt.getValue()-me.input.alt_ft.getValue();
         me.showBoxes = TRUE;
         if (me.input.alt_ft.getValue() * FT2M > 1000) {
@@ -1822,8 +1777,8 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
         }
       } elsif(mode == LANDING and land.mode < 3 and land.mode > 0) {
         me.desired_alt_delta_ft = (500*M2FT)-me.input.alt_ft.getValue();
-      } elsif (me.input.APLockAlt.getValue() == "agl-hold" and me.input.APTgtAgl.getValue() != nil) {
-        me.desired_alt_delta_ft = me.input.APTgtAgl.getValue()-me.input.rad_alt.getValue();
+      #} elsif (me.input.APLockAlt.getValue() == "agl-hold" and me.input.APTgtAgl.getValue() != nil) {
+      #  me.desired_alt_delta_ft = me.input.APTgtAgl.getValue()-me.input.rad_alt.getValue();
       } elsif(me.input.RMActive.getValue() == 1 and me.input.RMCurrWaypoint.getValue() != nil and me.input.RMCurrWaypoint.getValue() >= 0) {
         me.idx = me.input.RMCurrWaypoint.getValue();
         me.rt_alt = getprop("autopilot/route-manager/route/wp["~me.idx~"]/altitude-ft");
@@ -1841,7 +1796,7 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
         } else {
           me.desired_lines3.hide();
         }
-        if (me.showBoxes == TRUE and (getprop("fdm/jsbsim/systems/indicators/auto-altitude-secondary") == FALSE or me.input.twoHz.getValue())) {
+        if (me.showBoxes == TRUE and (!getprop("fdm/jsbsim/systems/indicators/flashing-alt-bars") or me.input.twoHz.getValue())) {
           me.desired_boxes.show();
         } else {
           me.desired_boxes.hide();
@@ -1894,7 +1849,7 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
     me.mach = me.input.mach.getValue();
     me.metric = me.input.units.getValue();
     me.displayGS = air2ground;# in AJ(S) speed type is selected by weapon type when in tactical mode.
-    if (mode == LANDING or me.input.rad_alt.getValue()*FT2M > 1000) {
+    if (mode == LANDING or (me.input.rad_alt_ready.getBoolValue() and me.input.rad_alt.getValue()*FT2M > 1000)) {
       # page 368 in JA37Di manual (small).
       me.displayGS = FALSE;
     } elsif (getprop("ja37/systems/variant") == 0) {
@@ -2020,23 +1975,6 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
       me.horizon_line_gap.hide();
       me.horizon_line_nav.show();
       me.horizon_line.hide();
-    }
-  },
-
-  displayTurnCoordinator: func () {
-    if (1==0 and me.input.sideslipOn.getValue() == TRUE and me.final == FALSE) {
-      if(me.input.srvTurn.getValue() == 1) {
-        #me.t_rot.setRotation(getprop("/orientation/roll-deg") * D2R * 0.5);
-        me.slip_indicator.setTranslation(clamp(me.input.beta.getValue()*20, -(150/1024)*canvasWidth, (150/1024)*canvasWidth), 0);
-        #if(me.final == TRUE) {
-        #  me.turn_group.setTranslation(sideslipPlaceXFinal, sideslipPlaceYFinal);
-        #} else {
-          me.turn_group.setTranslation(sideslipPlaceX, sideslipPlaceY);
-        #}
-      }
-      me.turn_group.show();
-    } else {
-      me.turn_group.hide();
     }
   },
 
@@ -2332,7 +2270,7 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
 
           if (me.gearsDown == TRUE) {
             me.alpha = me.input.alphaJSB.getValue();
-            me.highAlpha = getprop("ja37/avionics/high-alpha");
+            me.highAlpha = getprop("fdm/jsbsim/autoflight/high-alpha");
             me.idealAlpha = 15.5;# the ideal aoa for landing.
             if (me.highAlpha == FALSE) {
               me.myWeight = getprop("fdm/jsbsim/inertia/weight-lbs")*LB2KG;
@@ -2938,12 +2876,10 @@ me.clipAltScale = me.alt_scale_clip_grp.createChild("image")
     }
     me.diamond_small.update();
     me.lock_ir.update();
-    if (me.missileCurr != nil and (me.missileCurr.isBore() or (!me.missileCurr.isSlave() and !me.missileCurr.isBore() and !me.missileCurr.isCaged()) or (me.missileCurr.isSlave() and !me.missileCurr.command_tgt)) and radar_logic.tracks != nil) {
-      #me.missileCurr.contacts = [radar_logic.selection];
-      #me.missileCurr.contacts.extend(radar_logic.tracks);
-      me.missileCurr.contacts = radar_logic.tracks;
+    if (me.missileCurr != nil and (me.missileCurr.isBore() or (!me.missileCurr.isSlave() and !me.missileCurr.isBore() and !me.missileCurr.isCaged()) or (me.missileCurr.isSlave() and !me.missileCurr.command_tgt))) {
+      me.missileCurr.setContacts(radar_logic.complete_list);
     } elsif (me.missileCurr != nil) {
-      me.missileCurr.contacts = [];
+      me.missileCurr.setContacts([]);
     }
   },
 
@@ -3267,14 +3203,12 @@ var reinitHUD = FALSE;
 var hud_pilot = nil;
 var init = func() {
   removelistener(id); # only call once
-  if(getprop("ja37/supported/canvas") == TRUE) {
-    hud_pilot = HUDnasal.new({"node": "hud", "texture": "hud.png"});
-    #setprop("sim/hud/visibility[1]", 0);
-    
-    #print("HUD initialized.");
-    hud_pilot.update();
-    #IR_loop();
-  }
+  hud_pilot = HUDnasal.new({"node": "hud", "texture": "hud.png"});
+  #setprop("sim/hud/visibility[1]", 0);
+  
+  #print("HUD initialized.");
+  hud_pilot.update();
+  #IR_loop();
 };
 
 var init2 = setlistener("/sim/signals/reinit", func() {
@@ -3328,8 +3262,7 @@ var reinit = func() {#mostly called to change HUD color
     item.setColor(red, green, blue, alpha);
    }
    color = [red, green, blue, alpha];
-   hud_pilot.slip_indicator.setColorFill(red, green, blue, alpha);
-   
+
    if (IR) {
      HUDnasal.main.canvas.setColorBackground(red, green, blue, 0);
    } elsif (backup == FALSE) {
@@ -3347,16 +3280,12 @@ setlistener("sim/rendering/als-filters/use-filtering", reinit,0,0);
 setlistener("sim/rendering/als-filters/use-IR-vision", reinit,0,0);
 
 var cycle_units = func () {
-  if(getprop("ja37/hud/mode") > 0) {
-    ja37.click();
-    var current = getprop("ja37/hud/units-metric");
-    if(current == TRUE) {
-      setprop("ja37/hud/units-metric", FALSE);
-    } else {
-      setprop("ja37/hud/units-metric", TRUE);
-    }
+  ja37.click();
+  var current = getprop("ja37/hud/units-metric");
+  if(current == TRUE) {
+    setprop("ja37/hud/units-metric", FALSE);
   } else {
-    aircraft.HUD.cycle_type();
+    setprop("ja37/hud/units-metric", TRUE);
   }
 };
 
@@ -3371,30 +3300,22 @@ var cycle_landingMode = func () {
 };
 
 var toggle_combat = func () {
-  if(getprop("ja37/hud/mode") > 0) {
-    ja37.click();
-    var current = getprop("/ja37/hud/combat");
-    if(current == 1) {
-      setprop("/ja37/hud/combat", FALSE);
-    } else {
-      setprop("/ja37/hud/combat", TRUE);
-    }
+  ja37.click();
+  var current = getprop("/ja37/hud/combat");
+  if(current == 1) {
+    setprop("/ja37/hud/combat", FALSE);
   } else {
-    aircraft.HUD.cycle_color();
+    setprop("/ja37/hud/combat", TRUE);
   }
 };
 
 var toggleCallsign = func () {
-  if(getprop("ja37/hud/mode") > 0) {
-    ja37.click();
-    var current = getprop("/ja37/hud/callsign");
-    if(current == 1) {
-      setprop("/ja37/hud/callsign", FALSE);
-    } else {
-      setprop("/ja37/hud/callsign", TRUE);
-    }
+  ja37.click();
+  var current = getprop("/ja37/hud/callsign");
+  if(current == 1) {
+    setprop("/ja37/hud/callsign", FALSE);
   } else {
-    aircraft.HUD.normal_type();
+    setprop("/ja37/hud/callsign", TRUE);
   }
 };
 

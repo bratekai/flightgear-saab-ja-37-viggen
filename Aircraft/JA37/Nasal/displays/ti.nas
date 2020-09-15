@@ -72,21 +72,21 @@ var zoom = zooms[zoom_curr];
 
 var M2TEX = 1/(meterPerPixel[zoom]*math.cos(getprop('/position/latitude-deg')*D2R));
 
-var zoomIn = func() {
+var zoomIn = func(cycle=0) {
 	if (ti.active == FALSE) return;
   zoom_curr += 1;
   if (zoom_curr > 4) {
-  	zoom_curr = 0;
+  	zoom_curr = cycle ? 0 : 4;
   }
   zoom = zooms[zoom_curr];
   M2TEX = 1/(meterPerPixel[zoom]*math.cos(getprop('/position/latitude-deg')*D2R));
 }
 
-var zoomOut = func() {
+var zoomOut = func(cycle=0) {
 	if (ti.active == FALSE) return;
   zoom_curr -= 1;
   if (zoom_curr < 0) {
-  	zoom_curr = 4;
+  	zoom_curr = cycle ? 4 : 0;
   }
   zoom = zooms[zoom_curr];
   M2TEX = 1/(meterPerPixel[zoom]*math.cos(getprop('/position/latitude-deg')*D2R));
@@ -1294,10 +1294,15 @@ var TI = {
 		me.ecmRadius = 50;
 		me.ecm = [];
 	    append(me.ecm, me.ecm_grp.createChild("path")
+			.moveTo(circlePosH(-14, me.ecmRadius)[0], circlePosH(-14, me.ecmRadius)[1])
+	        .arcSmallCW(me.ecmRadius, me.ecmRadius, 0, circlePosH(14, me.ecmRadius)[0]-circlePosH(-14, me.ecmRadius)[0], circlePosH(14, me.ecmRadius)[1]-circlePosH(-14, me.ecmRadius)[1])
+	        .setStrokeLineWidth(w*10)
+	        .setColor(COLOR_YELLOW));
+	    append(me.ecm, me.ecm_grp.createChild("path")
 			.moveTo(circlePosH(16, me.ecmRadius)[0], circlePosH(16, me.ecmRadius)[1])
 	        .arcSmallCW(me.ecmRadius, me.ecmRadius, 0, circlePosH(44, me.ecmRadius)[0]-circlePosH(16, me.ecmRadius)[0], circlePosH(44, me.ecmRadius)[1]-circlePosH(16, me.ecmRadius)[1])
 	        .setStrokeLineWidth(w*10)
-	        .setColor(COLOR_RED));
+	        .setColor(COLOR_YELLOW));
 	    append(me.ecm, me.ecm_grp.createChild("path")
 			.moveTo(circlePosH(46, me.ecmRadius)[0], circlePosH(46, me.ecmRadius)[1])
 	        .arcSmallCW(me.ecmRadius, me.ecmRadius, 0, circlePosH(74, me.ecmRadius)[0]-circlePosH(46, me.ecmRadius)[0], circlePosH(74, me.ecmRadius)[1]-circlePosH(46, me.ecmRadius)[1])
@@ -1348,11 +1353,6 @@ var TI = {
 	        .arcSmallCW(me.ecmRadius, me.ecmRadius, 0, circlePosH(344, me.ecmRadius)[0]-circlePosH(316, me.ecmRadius)[0], circlePosH(344, me.ecmRadius)[1]-circlePosH(316, me.ecmRadius)[1])
 	        .setStrokeLineWidth(w*10)
 	        .setColor(COLOR_YELLOW));
-	    append(me.ecm, me.ecm_grp.createChild("path")
-			.moveTo(circlePosH(-14, me.ecmRadius)[0], circlePosH(-14, me.ecmRadius)[1])
-	        .arcSmallCW(me.ecmRadius, me.ecmRadius, 0, circlePosH(14, me.ecmRadius)[0]-circlePosH(-14, me.ecmRadius)[0], circlePosH(14, me.ecmRadius)[1]-circlePosH(-14, me.ecmRadius)[1])
-	        .setStrokeLineWidth(w*10)
-	        .setColor(COLOR_GREEN));
 
 		# small airports
 		me.baseSmallText = [];
@@ -1501,11 +1501,12 @@ var TI = {
 	  	var ti = { parents: [TI] };
 	  	ti.input = {
 			alt_ft:               "instrumentation/altimeter/indicated-altitude-ft",
-			APLockAlt:            "autopilot/locks/altitude",
-			APTgtAgl:             "autopilot/settings/target-agl-ft",
-			APTgtAlt:             "autopilot/settings/target-altitude-ft",
+			#APmode:               "fdm/jsbsim/autoflight/mode",
+			#APTgtAgl:             "autopilot/settings/target-agl-ft",
+			#APTgtAlt:             "fdm/jsbsim/autoflight/pitch/alt/target",
 			heading:              "instrumentation/heading-indicator/indicated-heading-deg",
-			rad_alt:              "position/altitude-agl-ft",
+			rad_alt:              "instrumentation/radar-altimeter/radar-altitude-ft",
+			rad_alt_ready:        "instrumentation/radar-altimeter/ready",
 			radarEnabled:         "ja37/hud/tracks-enabled",
 			radarRange:           "instrumentation/radar/range",
 			radarServ:            "instrumentation/radar/serviceable",
@@ -1532,7 +1533,6 @@ var TI = {
 			qfeActive:        	  "ja37/displays/qfe-active",
 	        qfeShown:		  	  "ja37/displays/qfe-shown",
 	        currentMode:          "ja37/hud/current-mode",
-	        ctrlRadar:        	  "controls/altimeter-radar",
 	        nav0InRange:      	  "instrumentation/nav[0]/in-range",
 	        fullMenus:            "ja37/displays/show-full-menus",
 	        APLockHeading:    	  "autopilot/locks/heading",
@@ -1673,10 +1673,6 @@ var TI = {
 		ti.showHostileZones = TRUE;
 		ti.showFriendlyZones = TRUE;
 		
-		# radar echoes overlay
-		ti.foes    = [];
-		ti.friends = [];
-		
 		# rwr overlay
 		ti.ECMon   = FALSE;
 		
@@ -1724,9 +1720,7 @@ var TI = {
 
 	startFailListener: func {
 		#this will run entire session, so no need to unsubscribe.
-		if (getprop("ja37/supported/failEvents") == TRUE) {
-			FailureMgr.events["trigger-fired"].subscribe(func {call(func{me.newFails = 1}, nil, me, me)});
-		}
+		FailureMgr.events["trigger-fired"].subscribe(func {call(func{me.newFails = 1}, nil, me, me)});
 	},
 
 
@@ -1771,7 +1765,6 @@ var TI = {
 		me.showMapScale();
 		me.updateSVY();# must be before displayRadarTracks and showselfvector
 		me.showSelfVector();
-		me.defineEnemies();# must be before displayRadarTracks
 		me.displayRadarTracks();
 		me.showRunway();
 		me.showRadarLimit();
@@ -2146,7 +2139,6 @@ var TI = {
 		if (math.abs(me.menuMain) == MAIN_SYSTEMS) {
 			if (me.menuTrap == FALSE) {
 				if (me.input.wow1.getValue() == 0) {
-#					if (getprop("/autopilot/target-tracking-ja37/enable") == TRUE) {
 					if (radar_logic.steerOrder == TRUE) {
 						me.menuButtonBox[1].show();
 					}
@@ -3301,14 +3293,10 @@ var TI = {
 
 	ecmOverlay: func {
 		if (me.ECMon == TRUE) {
-			for (me.ijk =0;me.ijk<12;me.ijk+=1) {
-				if (getprop("ja37/sound/incoming"~(me.ijk+1)) == TRUE) {
-					me.ecm[me.ijk].setColor(COLOR_RED);
-				} elsif (radar_logic.rwr[me.ijk] == TRUE) {
-					me.ecm[me.ijk].setColor(COLOR_YELLOW);
-				} else {
-					me.ecm[me.ijk].setColor(COLOR_GREEN_DARK);
-				}
+			for (var i=0; i<12; i+=1) {
+				if(rwr.ja_rwr_sectors[i] == 2) me.ecm[i].setColor(COLOR_RED);
+				elsif(rwr.ja_rwr_sectors[i] == 1) me.ecm[i].setColor(COLOR_YELLOW);
+				else me.ecm[i].setColor(COLOR_GREEN_DARK);
 			}
 			me.ecm_grp.show();
 		} else {
@@ -4417,7 +4405,7 @@ var TI = {
 			me.fData = TRUE;
 		} elsif (me.displayFlight == FLIGHTDATA_ON) {
 			me.fData = TRUE;
-		} elsif (me.displayFlight == FLIGHTDATA_CLR and (me.input.rad_alt.getValue()*FT2M < 1000 or math.abs(me.input.pitch.getValue()) > 10 or math.abs(me.input.roll.getValue()) > 45)) {
+		} elsif (me.displayFlight == FLIGHTDATA_CLR and (me.input.rad_alt_ready.getBoolValue() and me.input.rad_alt.getValue()*FT2M < 1000 or math.abs(me.input.pitch.getValue()) > 10 or math.abs(me.input.roll.getValue()) > 45)) {
 			me.fData = TRUE;
 		}
 		if (me.fData == TRUE) {
@@ -4752,11 +4740,6 @@ var TI = {
 		}
 	},
 
-	defineEnemies: func {
-		me.foes    = [getprop("ja37/faf/foe-1"),getprop("ja37/faf/foe-2"),getprop("ja37/faf/foe-3"),getprop("ja37/faf/foe-4"),getprop("ja37/faf/foe-5"),getprop("ja37/faf/foe-6")];
-		me.friends = [getprop("ja37/faf/friend-1"),getprop("ja37/faf/friend-2"),getprop("ja37/faf/friend-3"),getprop("ja37/faf/friend-4"),getprop("ja37/faf/friend-5"),getprop("ja37/faf/friend-6")];
-	},
-
 	displayRadarTracks: func () {
 
 		me.threatIndex  = -1;
@@ -4848,11 +4831,11 @@ var TI = {
 		    me.tgtSpeed = contact.get_Speed();
 		    me.myHeading = me.input.headTrue.getValue();
 		    me.boogie = 0;
-		    if (containsVector(me.friends, contact.get_Callsign())) {
+		    if (faf.is_friend(contact.get_Callsign())) {
 	    		me.boogie = 1;
-	    	} elsif (containsVector(me.foes, contact.get_Callsign())) {
+		    } elsif (faf.is_foe(contact.get_Callsign())) {
 	    		me.boogie = -1;
-	    	}
+		    }
 
 		    if (me.currentIndexT == 0 and contact.parents[0] == radar_logic.ContactGPS) {
 		    	me.gpsSymbol.setTranslation(me.pos_xx, me.pos_yy);
@@ -5367,7 +5350,7 @@ var TI = {
 			}
 			if (me.menuMain == MAIN_DISPLAY) {
 				# change zoom
-				zoomOut();
+				zoomOut(cycle:TRUE);
 			}
 			if (me.menuMain == MAIN_MISSION_DATA) {
 				route.Polygon.setToggleAreaEdit();
@@ -5985,15 +5968,13 @@ var TI = {
 var ti = nil;
 var init = func {
 	removelistener(idl); # only call once
-	if (getprop("ja37/supported/canvas") == TRUE) {
-		setupCanvas();
-		ti = TI.new();
-		settimer(func {
-			ti.loop();#must be first due to me.rootCenterY
-			ti.loopFast();
-			ti.loopSlow();
-		},0.5);# this will prevent it from starting before route has been initialized.
-	}
+	setupCanvas();
+	ti = TI.new();
+	settimer(func {
+		ti.loop();#must be first due to me.rootCenterY
+		ti.loopFast();
+		ti.loopSlow();
+	},0.5);# this will prevent it from starting before route has been initialized.
 }
 
 #idl = setlistener("ja37/supported/initialized", init, 0, 0);

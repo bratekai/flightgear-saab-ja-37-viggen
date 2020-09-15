@@ -3076,23 +3076,23 @@ TI: ALFA and VIKT now only display when gears extended and in landing mode.
 Sim: The TILS switch now toggles the TILS system, and is on by default. If off and ILS is manually set and no landing base coded in, ILS will still work.
 HUD: Fixed that at extreme pitch the echoes or Fixes would not be displayed correct.
 GUI: Pressing ctrl-shift-q in cockpit view will now zoom in on HUD. The HUD view has been removed.
-Control: {it0uchpods} Overhaul Autopilot Roll
+Control: {Octal450} Overhaul Autopilot Roll
 Control: Fixed the stick had aileron control in CSS deadzone.
-Control: {it0uchpods} Autopilot Roll Tweaking
-Control: {it0uchpods} Overhaul A/T
-Control: {it0uchpods} Overhaul AP Pitch and Tweak
+Control: {Octal450} Autopilot Roll Tweaking
+Control: {Octal450} Overhaul A/T
+Control: {Octal450} Overhaul AP Pitch and Tweak
 Control: Allow A/P elevator to pull more G when banked.
-Control: {it0uchpods} Limit u_min G now dynamic
+Control: {Octal450} Limit u_min G now dynamic
 Control: Fixed pitch trim was negated and too large effect.
-Control: {it0uchpods} Autopilot logic fixes, rounding, predictino
-Control: {it0uchpods} Autopilot Pitch update, disable damper on AP Pitch
-Doc: Added it0uchpods to author document.
+Control: {Octal450} Autopilot logic fixes, rounding, predictino
+Control: {Octal450} Autopilot Pitch update, disable damper on AP Pitch
+Doc: Added Octal450 to author document.
 Control: Moved some properties to set file.
-Control: {it0uchpods} Adjust Target RoC PID for new pitch
-Control: {it0uchpods} Fix Pitch CSS not working properly, improve CSS
+Control: {Octal450} Adjust Target RoC PID for new pitch
+Control: {Octal450} Fix Pitch CSS not working properly, improve CSS
 Control: Better delay of halt AP variables.
 Control: Nasal A/P loop twice as slow.
-Control: {it0uchpods} Attempt to fix Alt oscilation issue
+Control: {Octal450} Attempt to fix Alt oscilation issue
 Control: Remove delay for engaging AP CSS.
 Control: Fixed bad init of A/P halt properties.
 Sim: JA Route-manager and TI now supports multiple flightplans. (FG 2017.3.1+)
@@ -3250,7 +3250,7 @@ Model: Changed the blue color on livery 32 Blue Peter.
 Model: Made the Fly-By View less predictable.
 Model: Made a HD version of livery 11.
 Sound: Made the datapanel switches click.
-Control: {it0uchpods} Fix missing minus sign in Ki in A/P.
+Control: {Octal450} Fix missing minus sign in Ki in A/P.
 MI: FPI is now fixed to indicator middle just like TI, horizon and ground symbol moves in relation to it.
 MI: Radar echoes now follow horizon rotation.
 TI: Small fix to how horizon moves in relation to FPI.
@@ -3395,11 +3395,11 @@ Control: Made all rotational inputs be independent from rotational winds, as the
 
 4.309 - 2017 March 4
 =====
-Control: {it0uchpods} Fixed many A/P bugs.
-Control: {it0uchpods} Fixed roll hold being affected by wind.
-Control: {it0uchpods} Fixed pitch hold worked only with integers.
-Control: {it0uchpods} Fixed A/P oscilations.
-Control: {it0uchpods} Upgrade A/P rate based control system to latest IV system.
+Control: {Octal450} Fixed many A/P bugs.
+Control: {Octal450} Fixed roll hold being affected by wind.
+Control: {Octal450} Fixed pitch hold worked only with integers.
+Control: {Octal450} Fixed A/P oscilations.
+Control: {Octal450} Upgrade A/P rate based control system to latest IV system.
 Sim: Fixed that some method were called to change canvas, before the script they were changing had been loaded.
 HUD: Upper half squares is now radar echoes, with the selection having velocity vector and distance to set it apart.
 HUD: Upper semi circle is now radar lock.
@@ -3432,7 +3432,7 @@ TI: Bulls-eye infobox shows relation from bulls-eye to cursor. When cursor is in
 DAP: Can now edit or delete bulls-eye (edit LV-area 179).
 TI: When cursor not active bulls-eye show relation to radar selection.
 TI: Bulls-eye infobox now uses degree symbol.
-Sim: Authors listed in Launcher now includes it0uchpods and Spectre, since the authors font is smaller in 2018.1.1.
+Sim: Authors listed in Launcher now includes Octal450 and Spectre, since the authors font is smaller in 2018.1.1.
 TI: The cursor is now able to select and command steer order on aircraft on SVY instead of randomly whats behind it.
 TI: SVY is no longer shown in MSDA menu. (not 100% sure this is correct, but it makes sense..)
 TI: Made bulls-eye symbol smaller.
@@ -3491,7 +3491,7 @@ Arms: print statements optimization.
 Arms: Fixed callsign for LOAL missiles.
 Sim: Damage update.
 Arms: attempt to load only single xml when firing, didnt work with smoke/explosion though.
-Sim: {it0uchpods} Add modified distance zooming for exterior views.
+Sim: {Octal450} Add modified distance zooming for exterior views.
 Control: {Colin Geniet} Adds properties for cursor controls.
 Control: {Colin Geniet} Adds new properties for cursor movements and trigger.
 Control: {Colin Geniet} Read input from those properties instead of flight controls.
@@ -3519,7 +3519,7 @@ Animation: Key 'F6' now ejects the pilot.
 4.313 - 2018 December 7 (2018.3 release)
 =====
 Effect: Heavy rain now also do spray.
-GUI: {it0uchpods} View system overhaul.
+GUI: {Octal450} View system overhaul.
 Model: {Richard} Added fallback model index. Also added a Viggen fallback model to 2018.3.1 $FGDATA.
 Arms: Updated missile code.
 Effect: Normal map is now DDS format.
@@ -3869,5 +3869,77 @@ Radar: Fix for unneeded console output.
 Effect: Fix for dithering in FG next.
 Arms: {Colin} Fix M70 rockets trigger logic
 
-4.318
+4.318 - 2020 July 23
 =====
+Major change: Complete FCS and autopilot rework by Octal450.
+The new flight controls are very accurately modelled based on the flight manuals, making it far more realistic than the previous FBW-like controls.
+Notable features:
+- Individual simulation of each control surfaces, with pitch/roll mixing
+- Gearings automatically change the surface vs stick deflection ratios depending on speed
+- Autopilot STICK mode provides damping (always on under normal conditions)
+- Pitch and Altitude hold autopilot modes, with several sub-modes engaged automatically under specific conditions
+- Speed hold (for cruise) and AoA (for landing) autothrottle modes
+- Detailed autopilot and autothrottle engagement/disengagement/warning logic
+
+Other changes:
+Sim: {Colin} Remove 'userarchive' attributes (aircraft-data used instead)
+Arms: {Colin} Fix gun/rocket hit detection
+Arms: Port in missile changes done in S-300.
+Model: {Colin} Fix rotation axes for flaps
+Model: {Colin} Improve formation lights material
+Model: {Colin} Fix vapour animations over MP
+Sim: {Colin} Add GCI script
+Sim: Added a method to convert a vector to geo centered vector.
+Radar: Now checks if contact is behind horizon.
+Effect: Use spotlights for land/taxi light.
+Radar: Fixed potential failure in radar.
+Sim: Fix that some matrices were multiplied in wrong order.
+Arms: Experimental update to account for AoA and sideslip of missile target in proportional navigation.
+HUD: Better positioning of nearby objects.
+Radar: Fix for not putting new methods into all Contact classes.
+HUD: Adding gunsight.
+Model: {Colin} Remove internal gunpod model on AJ(S)
+Model: {Colin} Fix AJ(S) waypoint indicator lockup
+Model: {Spectre} Added mig aggressor livery.
+Sim: {Colin} Revise throttle control logic, add throttle cutoff position
+GUI: {Colin} Update and improve checklists
+Keybindings: {Colin} Remove pylon selection keys
+Keybindings: {Colin} Change ejection key to Ctrl-E x3
+Keybindings: {Colin} Change GCI keys to F5-F7
+GUI: Made cursor properties more generic to be used in other aircraft as well.
+Arms: {Colin} Remove all weapons from center pylon
+Model: {Colin} Fix bugs in M70 jettison animation
+Sim: {Colin} Deselect radar target when losing lock
+Sim: {Colin} Enable doppler simulation for JA radar
+Model: {Colin} Fix M90 strip color
+Sim: {Colin} Fix AJS external tank capacity
+GUI: {Colin} New loadout/fuel selection dialog
+GUI: {Colin} New configuration menu
+TI: {Colin} Fix EOMR (AAA) being marked as non-functional in the swedish TI
+Aero: Slight tuning of Cm zero.
+Arms: {Colin} Implement remote control guidance for Rb05
+Arms: {Colin} Add spotting flare model to Rb05
+Arms: {Colin} Adjust Rb05 performances
+GUI/Arms: {Colin} Disable refuel/reload during ground roll with damage on
+Effects: {Colin} Cleanup redundant shaders (identical to FG default ones)
+Sim: {Pinto} Fix bug in turn radius calc.
+Sim: Turn radius account for zero turnrate.
+HUD: {Colin} Fix low altitude scale being hidden after turning master arm off
+Radar: {Colin} Fix for 'radar_logic.complete_list' missing some radar contacts
+Radar: {Colin} Improve target air/ground classification logic
+RWR: {Colin} Add radar lock warnings
+Radar: {Colin} Disable radar when nose landing gear is compressed
+Radar: {Colin} Fix bug in RCS code, causing targets to shortly appear at max range
+Radar: {Colin} Increase RCS test frequency for selected track
+Arms: Fix for rare case when tracking seeker movement, and skip a guiding pass, then it should not compare since la
+st pass.
+Keybindings: {Colin} Add Shift-F to deselect radar target
+Sim: {Colin} Disable external views when damage is on
+Arms: {Colin} Always use bore-sight mode for IR seeker on AJS
+Sound: {Colin} Fix some missing missile launch sounds
+Radar: Some work on the radar prototype.
+Radar: Fixed check for behind earth curvature sqrt could not handle a negative number with very low magnitude.
+RWR: {Colin} Rework AJS RWR lights
+RWR: {Colin} Add sounds (off by default, controlled by the volume knob on the RWR panel)
+Radar: {J Maverick 16} Update RCS database
+Input: {Colin} Fix left/right arrow keys being non-repeatable
